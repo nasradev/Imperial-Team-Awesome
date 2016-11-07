@@ -1,5 +1,7 @@
+clear;
+close all;
 % Load the image
-image = imread('IMG_5573.JPG');
+image = imread('IMG_5571.JPG');
 
 % Separate in three RGB channels
 im_r = image(:,:,1);
@@ -87,19 +89,18 @@ imageB(:,:,1) = uint8(blueMask) .* noBack_r;
 imageB(:,:,2) = uint8(blueMask) .* noBack_g;
 imageB(:,:,3) = uint8(blueMask) .* noBack_b;
 
-figure,
-subplot (3,1,1), imshow(imageR),
-subplot (3,1,2), imshow(imageG),
-subplot (3,1,3), imshow(imageB);
+% figure,
+% subplot (3,1,1), imshow(imageR),
+% subplot (3,1,2), imshow(imageG),
+% subplot (3,1,3), imshow(imageB);
 
 imrefR=imageB;
 imrefG=imageR;
 imrefB=imageR;
 imageR=imsubtract(imageR,imrefR);
-imageG=imsubtract(imageG,imref);
-imageB=imsubtract(imageB,imref);
+imageG=imsubtract(imageG,imrefG);
+imageB=imsubtract(imageB,imrefB);
 
-figure,
-subplot (3,1,1), imshow(imageR,[]),
-subplot (3,1,2), imshow(imageG,[]),
-subplot (3,1,3), imshow(imageB,[]);
+figure, imshow(imageR,[]);
+figure, imshow(imageG,[]);
+figure, imshow(imageB,[]);
