@@ -1,7 +1,7 @@
 clear;
 close all;
 % Load the image
-image = imread('IMG_5571.JPG');
+image = imread('IMG_5573.JPG');
 
 % Separate in three RGB channels
 im_r = image(:,:,1);
@@ -39,42 +39,53 @@ end
 %% Thresholding 
 
 %Threshold red
-% redThresholdLow = 120;%graythresh(im_r);
+% redThresholdLow = 120;%
 % redThresholdHigh = 255;
 % redMask = (noBack_r >= redThresholdLow) & (noBack_r <= redThresholdHigh);
-
-% level = multithresh(noBack_r,2);
-% seg_I = imquantize(noBack_r,level);
-% redMask = label2rgb(seg_I);
-
-level = graythresh(noBack_r);
-redMask = im2bw(noBack_r,level);
-
+levelR = graythresh(noBack_r);
+redMask = im2bw(noBack_r, levelR);
 
 %Threshold green
 % greenThresholdLow = 120;
 % greenThresholdHigh = 255;
 % greenMask = (noBack_g >= greenThresholdLow) & (noBack_g <= greenThresholdHigh);
-level = graythresh(noBack_g);
-greenMask = im2bw(noBack_g,level);
+levelG = graythresh(noBack_g);
+greenMask = im2bw(noBack_g, levelG);
 
 %Threshold blue
 % blueThresholdLow = 120;
 % blueThresholdHigh = 255;
 % blueMask = (noBack_b >= blueThresholdLow) & (noBack_b <= blueThresholdHigh);
-level = graythresh(noBack_b);
-blueMask = im2bw(noBack_b,level);
+levelB = graythresh(noBack_b);
+blueMask = im2bw(noBack_b, levelB);
 
-% Get rid of small objects.  Note: bwareaopen returns a logical.
-smallestAcceptableArea = 1000;
-redObjectsMask = uint8(bwareaopen(redMask, smallestAcceptableArea));
+% Get rid of small objects.
+% First an erosion, then only keep objects between 900 and 5000 px and
+% finally a dilatation
+redMask = imerode(redMask, strel('diamond', 2));
+redMask = imdilate(redMask, strel('diamond', 3));
+redMask = bwareafilt(redMask,[2000 200000]);
+ 
+greenMask = imerode(greenMask , strel('diamond', 2));
+greenMask = imdilate(greenMask , strel('diamond', 3));
+greenMask = bwareafilt(greenMask ,[2000 200000]);
+ 
+blueMask = imerode(blueMask , strel('diamond', 2));
+blueMask = imdilate(blueMask , strel('diamond', 3));
+blueMask = bwareafilt(blueMask ,[2000 200000]);
+
+% Labeling
+% [LR,numR] = bwlabel(redMask);
+% [LG,numG] = bwlabel(greenMask);
+% [LB,numB] = bwlabel(blueMask);
+
+sR = regionprops(redMask,'centroid');
+centroidsR = cat(1, sR.Centroid);
+
 
 %% Reconstruction
 
 %reconstruct red image
-% imageR(:,:,1) = uint8(redMask(:,:,1)) .* noBack_r;
-% imageR(:,:,2) = uint8(redMask(:,:,2)) .* noBack_g;
-% imageR(:,:,3) = uint8(redMask(:,:,3)) .* noBack_b;
 imageR(:,:,1) = uint8(redMask) .* noBack_r;
 imageR(:,:,2) = uint8(redMask) .* noBack_g;
 imageR(:,:,3) = uint8(redMask) .* noBack_b;
@@ -89,18 +100,9 @@ imageB(:,:,1) = uint8(blueMask) .* noBack_r;
 imageB(:,:,2) = uint8(blueMask) .* noBack_g;
 imageB(:,:,3) = uint8(blueMask) .* noBack_b;
 
-% figure,
-% subplot (3,1,1), imshow(imageR),
-% subplot (3,1,2), imshow(imageG),
-% subplot (3,1,3), imshow(imageB);
-
-imrefR=imageB;
-imrefG=imageR;
-imrefB=imageR;
-imageR=imsubtract(imageR,imrefR);
-imageG=imsubtract(imageG,imrefG);
-imageB=imsubtract(imageB,imrefB);
-
-figure, imshow(imageR,[]);
-figure, imshow(imageG,[]);
-figure, imshow(imageB,[]);
+figure, imshow(imageR), 
+hold on
+plot(centroidsR(:,1),centroidsR(:,2), 'b*')
+hold off
+figure, imshow(imageG);
+figure, imshow(imageB);
