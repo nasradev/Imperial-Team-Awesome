@@ -1,6 +1,7 @@
 clear;
+close all;
 % Load the image
-image = imread('IMG_5571.JPG');
+image = imread('IMG_5573.JPG');
 
 % Separate in three RGB channels
 im_r = image(:,:,1);
@@ -38,34 +39,40 @@ end
 %% Thresholding 
 
 %Threshold red
-redThresholdLow = 120;%graythresh(im_r);
-redThresholdHigh = 255;
-redMask = (noBack_r >= redThresholdLow) & (noBack_r <= redThresholdHigh);
+% redThresholdLow = 120;%
+% redThresholdHigh = 255;
+% redMask = (noBack_r >= redThresholdLow) & (noBack_r <= redThresholdHigh);
+levelR = graythresh(noBack_r);
+redMask = im2bw(noBack_r, levelR);
 
 %Threshold green
-greenThresholdLow = 120;
-greenThresholdHigh = 255;
-greenMask = (noBack_g >= greenThresholdLow) & (noBack_g <= greenThresholdHigh);
+% greenThresholdLow = 120;
+% greenThresholdHigh = 255;
+% greenMask = (noBack_g >= greenThresholdLow) & (noBack_g <= greenThresholdHigh);
+levelG = graythresh(noBack_g);
+greenMask = im2bw(noBack_g, levelG);
 
 %Threshold blue
-blueThresholdLow = 120;
-blueThresholdHigh = 255;
-blueMask = (noBack_b >= blueThresholdLow) & (noBack_b <= blueThresholdHigh);
+% blueThresholdLow = 120;
+% blueThresholdHigh = 255;
+% blueMask = (noBack_b >= blueThresholdLow) & (noBack_b <= blueThresholdHigh);
+levelB = graythresh(noBack_b);
+blueMask = im2bw(noBack_b, levelB);
 
 % Get rid of small objects.
 % First an erosion, then only keep objects between 900 and 5000 px and
 % finally a dilatation
 redMask = imerode(redMask, strel('diamond', 2));
-redMask = bwareafilt(redMask,[900 5000]);
 redMask = imdilate(redMask, strel('diamond', 3));
+redMask = bwareafilt(redMask,[2000 200000]);
  
 greenMask = imerode(greenMask , strel('diamond', 2));
-greenMask = bwareafilt(greenMask ,[900 5000]);
 greenMask = imdilate(greenMask , strel('diamond', 3));
+greenMask = bwareafilt(greenMask ,[2000 200000]);
  
 blueMask = imerode(blueMask , strel('diamond', 2));
-blueMask = bwareafilt(blueMask ,[900 5000]);
 blueMask = imdilate(blueMask , strel('diamond', 3));
+blueMask = bwareafilt(blueMask ,[2000 200000]);
 
 % Labeling
 % [LR,numR] = bwlabel(redMask);
