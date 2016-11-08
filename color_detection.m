@@ -62,22 +62,7 @@ blueMask = imdilate(blueMask , strel('diamond', 3));
 blueMask = bwareafilt(blueMask ,[2000 200000]);
 
 
-%% Reconstruction
-
-% %reconstruct red image
-% imageR(:,:,1) = uint8(redMask) .* noBack_r;
-% imageR(:,:,2) = uint8(redMask) .* noBack_g;
-% imageR(:,:,3) = uint8(redMask) .* noBack_b;
-% 
-% %reconstruct green image
-% imageG(:,:,1) = uint8(greenMask) .* noBack_r;
-% imageG(:,:,2) = uint8(greenMask) .* noBack_g;
-% imageG(:,:,3) = uint8(greenMask) .* noBack_b;
-% 
-% %reconstruct blue image
-% imageB(:,:,1) = uint8(blueMask) .* noBack_r;
-% imageB(:,:,2) = uint8(blueMask) .* noBack_g;
-% imageB(:,:,3) = uint8(blueMask) .* noBack_b;
+% Reconstruction
 
 % reconstruct an image with all the markers
 allMask = uint8(redMask | greenMask | blueMask);
@@ -91,7 +76,7 @@ all(:,:,3) = uint8(allMask) .* noBack_b;
 [L,num] = bwlabel(allMask);
 
 % get the centroids
-s = regionprops(L,'centroid');
+s = regionprops(L,'centroid', 'orientation');
 centroids = cat(1, s.Centroid);
 
 % See the colors of the centroids
@@ -117,6 +102,13 @@ for i = 1:num
     end
 end
 
+%% Edge detection
+% find the orientation of the labels
+angles = cat(1, s.Orientation);
+
+% find edges along that direction near the centroid
+
+% compare
 
 %% Ploting
 figure, imshow (image);
