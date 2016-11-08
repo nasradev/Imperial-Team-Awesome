@@ -1,7 +1,15 @@
 clear;
 close all;
+FileName='olivier_1_trimmed.MOV';
+% Load the video
+obj = mmreader(FileName);
+video = obj.read();
+%Then, frame #K is 
+for k =1:10
+image = video(:,:,:,k);
+
 % Load the image
-image = imread('IMG_5573.JPG');
+%image = imread('IMG_5573.JPG');
 
 % Separate in three RGB channels
 im_r = image(:,:,1);
@@ -105,4 +113,14 @@ hold on
 plot(centroidsR(:,1),centroidsR(:,2), 'b*')
 hold off
 figure, imshow(imageG);
+hold on
+plot(centroidsG(:,1),centroidsG(:,2), 'b*')
+hold off
 figure, imshow(imageB);
+hold on
+plot(centroidsB(:,1),centroidsB(:,2), 'b*')
+hold off 
+framesR(k)=imageR;
+framesG(k)=imageG;
+framesB(k)=imageB;
+end
