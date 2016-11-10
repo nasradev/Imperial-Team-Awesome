@@ -1,13 +1,17 @@
 clear;
 close all;
-FileName='olivier_1_trimmed.MOV';
+FileName='osupervideo.MOV';
 % Load the video
-obj = mmreader(FileName);
+obj = VideoReader(FileName);
 video = obj.read();
-%Then, frame #K is 
-for k =1:10
+%Then, frame #K is
+v = VideoWriter('supervideo_processed.avi');
+open(v);
+for k =1:3
 image = video(:,:,:,k);
 
+% figure, imshow(image);
+% title('original');
 % Load the image
 %image = imread('IMG_5573.JPG');
 
@@ -16,21 +20,7 @@ im_r = image(:,:,1);
 im_g = image(:,:,2);
 im_b = image(:,:,3);
 
-%% take off the white background (if any)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% % histograms of the three channels
-% [countsR,binLocationsR] = imhist(im_r);
-% [countsG,binLocationsG] = imhist(im_g);
-% [countsB,binLocationsB] = imhist(im_b);
-% 
-% % get the maximum number of pixels with one same value in each channel
-% Rmax = max(countsR);
-% Gmax = max(countsG);
-% Bmax = max(countsB);
-% 
-
-% Initialise 
+% Initialise
 noBack_r = im_r;
 noBack_g = im_g;
 noBack_b = im_b;
@@ -44,26 +34,17 @@ for i = 1:length(image(:,1,1))
     end
 end
 
-%% Thresholding 
+%% Thresholding
 
 %Threshold red
-% redThresholdLow = 120;%
-% redThresholdHigh = 255;
-% redMask = (noBack_r >= redThresholdLow) & (noBack_r <= redThresholdHigh);
 levelR = graythresh(noBack_r);
 redMask = im2bw(noBack_r, levelR);
 
 %Threshold green
-% greenThresholdLow = 120;
-% greenThresholdHigh = 255;
-% greenMask = (noBack_g >= greenThresholdLow) & (noBack_g <= greenThresholdHigh);
 levelG = graythresh(noBack_g);
 greenMask = im2bw(noBack_g, levelG);
 
 %Threshold blue
-% blueThresholdLow = 120;
-% blueThresholdHigh = 255;
-% blueMask = (noBack_b >= blueThresholdLow) & (noBack_b <= blueThresholdHigh);
 levelB = graythresh(noBack_b);
 blueMask = im2bw(noBack_b, levelB);
 
@@ -73,54 +54,123 @@ blueMask = im2bw(noBack_b, levelB);
 redMask = imerode(redMask, strel('diamond', 2));
 redMask = imdilate(redMask, strel('diamond', 3));
 redMask = bwareafilt(redMask,[2000 200000]);
- 
+
 greenMask = imerode(greenMask , strel('diamond', 2));
 greenMask = imdilate(greenMask , strel('diamond', 3));
 greenMask = bwareafilt(greenMask ,[2000 200000]);
- 
+
 blueMask = imerode(blueMask , strel('diamond', 2));
 blueMask = imdilate(blueMask , strel('diamond', 3));
 blueMask = bwareafilt(blueMask ,[2000 200000]);
 
-% Labeling
-% [LR,numR] = bwlabel(redMask);
-% [LG,numG] = bwlabel(greenMask);
-% [LB,numB] = bwlabel(blueMask);
-
-sR = regionprops(redMask,'centroid');
-centroidsR = cat(1, sR.Centroid);
-
 
 %% Reconstruction
+% reconstruct an image with all the markers
+allMask = (redMask | greenMask | blueMask);
+all(:,:,1) = uint8(allMask) .* noBack_r;
+all(:,:,2) = uint8(allMask) .* noBack_g;
+all(:,:,3) = uint8(allMask) .* noBack_b;
 
-%reconstruct red image
-imageR(:,:,1) = uint8(redMask) .* noBack_r;
-imageR(:,:,2) = uint8(redMask) .* noBack_g;
-imageR(:,:,3) = uint8(redMask) .* noBack_b;
+% Get centroid of segmented regions and save frames(k)
+%% Labeling and finding centroids
 
-%reconstruct green image
-imageG(:,:,1) = uint8(greenMask) .* noBack_r;
-imageG(:,:,2) = uint8(greenMask) .* noBack_g;
-imageG(:,:,3) = uint8(greenMask) .* noBack_b;
+% label the image
+[L,num] = bwlabel(allMask);
 
-%reconstruct blue image
-imageB(:,:,1) = uint8(blueMask) .* noBack_r;
-imageB(:,:,2) = uint8(blueMask) .* noBack_g;
-imageB(:,:,3) = uint8(blueMask) .* noBack_b;
+% get the centroids
+s = regionprops(L,'centroid','BoundingBox','Area');
+centroids = cat(1, s.Centroid);
 
-figure, imshow(imageR), 
-hold on
-plot(centroidsR(:,1),centroidsR(:,2), 'b*')
-hold off
-figure, imshow(imageG);
-hold on
-plot(centroidsG(:,1),centroidsG(:,2), 'b*')
-hold off
-figure, imshow(imageB);
-hold on
-plot(centroidsB(:,1),centroidsB(:,2), 'b*')
-hold off 
-framesR(k)=imageR;
-framesG(k)=imageG;
-framesB(k)=imageB;
+% See the colors of the centroids
+colors = impixel (all, centroids(:,1), centroids(:,2));
+
+% go through all the centroids and check to what color they correspond
+% create a matrix with
+%   - as many rows as labels there are
+%   - 4 columns (one for the label number, 2 for the centroid pos, 1 for the
+%   color).
+listIndex = zeros(num,4);
+for i = 1:num
+    % LABEL NAME
+    listIndex (i,1) = i;
+    % CENTROID POSITION
+    listIndex (i,2) = centroids(i, 1);
+    listIndex (i,3) = centroids(i, 2);
+    % COLOR
+    %     if not all 3 channels are 0 save otherwise delete region
+    if (colors(i,1) ~= 0 || colors(i,2) ~= 0 || colors(i,3) ~= 0)
+        [M,I] = max(colors(i,:));
+        listIndex(i,4) = I;
+    else         
+%         ind=listIndex(i,1);
+%         bb = s(ind).BoundingBox;
+%         imshow(all);
+%         rectangle('Position', bb, 'EdgeColor', 'red');
+%         x=bb(1,1);
+%         y=bb(1,2);
+%         w=bb(1,3);
+%         h=bb(1,4);
+%         L(int16(y):int16(y+h),int16(x):int16(x+w),:)=0;
+%         figure,imshow(L);
+ind=listIndex(i,1);
+for r=1:size(L,1)
+    for c=1:size(L,2)
+        if L(r,c)==ind
+            L(r,c)=0;
+        end
+    end
+end %setting pixels to zero
+figure,imshow(L);
+    end
 end
+
+figure, imshow(L);
+frame=getframe
+writeVideo(v,frame);
+end
+close(v)
+
+
+%% Ploting
+% figure, imshow (all);
+% hold on
+% for i = 1:length(listIndex)
+%     if (listIndex(i,4)~= 0)
+%         % plot red
+%         if (listIndex(i,4) == 1)
+%             plot (listIndex(i,2), listIndex(i,3),'r*')
+%             hold on
+%         end
+%         % plot green
+%         if (listIndex(i,4) == 2)
+%             plot (listIndex(i,2), listIndex(i,3),'g*')
+%             hold on
+%         end
+%         % plot blue
+%         if (listIndex(i,4) == 3)
+%             plot (listIndex(i,2), listIndex(i,3),'b*')
+%             hold on
+%         end
+%     end
+% end
+
+
+
+
+%% Compute Optical Flow Using Lucas-Kanade derivative of Gaussian
+vidReader = VideoReader('supervideo_processed.avi');
+% Create optical flow object.
+opticFlow = opticalFlowLKDoG('NumFrames',3);
+% Estimate the optical flow of the objects and display the flow vectors.
+   while hasFrame(vidReader)
+     frameRGB = readFrame(vidReader);
+     frameGray = rgb2gray(frameRGB);
+
+     flow = estimateFlow(opticFlow,frameGray);
+%      thresh=max(flow.Magnitude(:))/2;
+%      [x_loc, y_loc]=find(flow.Magnitude>thresh);
+     imshow(frameRGB);
+     hold on;
+     plot(flow,'DecimationFactor',[5 5],'ScaleFactor',25);
+     hold off;
+   end
