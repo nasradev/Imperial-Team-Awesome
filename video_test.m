@@ -1,7 +1,7 @@
 % Load the video
 close all;
 clear;
-video = VideoReader('video_webcam2.mp4');
+video = VideoReader('video_webcam4.mp4');
 video.CurrentTime = 3.00;
 while hasFrame(video)
     % Get a single frame
