@@ -1,83 +1,97 @@
 function [markersPos] = getMarkersPos2(image)
+% input: image you want to process
+% output: a matrix called markersPos with the position of the markers, one
+% for each color
+
 close all;
 
-% Load the image (uncomment if not using a video)
-%image = imread(image);
+% distance from the camera to the tools in cm
+depth = 64;
+
+% Load the image (comment if using a video)
+% image = imread(image);
 
 %% Image processing
-% take off the white background (if any)-----------------------------------
-% Initialise
-noBack_r = image(:,:,1);
-noBack_g = image(:,:,2);
-noBack_b = image(:,:,3);
+
+% take off the white background and shines(if any)-------------------------
+
+% HSV image to get the saturation channel
+hsv_image   = rgb2hsv(image);
+imageSat    = hsv_image(:,:,2);
+
+% RGB channels
+imageRed    = image(:,:,1);
+imageGreen  = image(:,:,2);
+imageBlue   = image(:,:,3);
+
+% Take off pixels with high values in the three RGB channels
+backgrThres = 160;
 for i = 1:length(image(:,1,1))
     for j = 1:length(image(1,:,1))
-        if (noBack_r(i,j) > 160 ...
-                && noBack_g(i,j) > 160 ...
-                && noBack_b(i,j) > 160)
-            noBack_r(i,j) = 0;
-            noBack_g(i,j) = 0;
-            noBack_b(i,j) = 0;
+        if (imageRed(i,j) > backgrThres ...
+                && imageGreen(i,j) > backgrThres ...
+                && imageBlue(i,j) > backgrThres)
+            imageRed(i,j) = 0;
+            imageGreen(i,j) = 0;
+            imageBlue(i,j) = 0;
         end
     end
 end
-% added
-% noBack(:,:,1) = noBack_r;
-% noBack(:,:,2) = noBack_g;
-% noBack(:,:,3) = noBack_b;
-% imshow(noBack);
-% pause
 
+% Generation of the mask --------------------------------------------------
 
-% Generation of a mask ----------------------------------------------------
-%Threshold red
-levelR = graythresh(noBack_r);
-levelG = graythresh(noBack_g);
-levelB = graythresh(noBack_b);
+%Thresholds definition
+% RGB channels
+levelR = graythresh(imageRed);
+levelG = graythresh(imageGreen);
+levelB = graythresh(imageBlue);
+% Saturation channel
+levelS = graythresh(imageSat);
 
-% levelsR = multithresh(noBack_r,2);
-% redMask = imquantize(noBack_r, levelsR);
-redMask = im2bw(noBack_r, levelR);
-%redMask = uint8(redMask*50);
-% imshow(redMask);
-% pause
+% Thresholding RGB 
+redMask     = im2bw(imageRed, levelR);
+greenMask   = im2bw(imageGreen, levelG);
+blueMask    = im2bw(imageBlue, levelB);
 
-%Threshold green
-greenMask = im2bw(noBack_g, levelG);
+% Thresholding Saturation
+satMask     = im2bw(imageSat, levelS);
 
-%Threshold blue
-blueMask = im2bw(noBack_b, levelB);
-
+% Combination of RGB masks
 redMask = redMask & ~greenMask & ~blueMask;
 greenMask = greenMask & ~redMask & ~blueMask;
-blueMask = blueMask & ~redMask;
+blueMask = blueMask & ~redMask; % blue marker usualy has green too
+
+% Elimitation of small objects --------------------------------------------
 
 % aprox length of the long side
-imageSizeCM = 25;
+imageSizeCM = depth * 1.05;
 markerSize = length(image(:,1))/imageSizeCM;
 % area = long side * short side (1/4 of the long one)
 markerArea = markerSize * markerSize /4;
 
-% Get rid of small objects.
-redMask = bwareafilt(redMask , [markerArea/2 inf]);%[2000 200000]);
-greenMask = bwareafilt(greenMask , [markerArea/2 inf]);
-blueMask = bwareafilt(blueMask , [markerArea/2 inf]);
+% Get rid of small objects
+redMask     = bwareafilt(redMask, [markerArea/2 inf]);
+greenMask   = bwareafilt(greenMask, [markerArea/2 inf]);
+blueMask    = bwareafilt(blueMask, [markerArea/2 inf]);
+satMask     = bwareafilt(satMask, [markerArea/2 inf]);
+
+% Reconstruction of the segmented image -----------------------------------
 
 % create a mask of the three colors
-allMask = redMask | greenMask | blueMask;
+finalMask = satMask & (redMask | greenMask | blueMask);
 
-%erode the mask
-allMask = imerode(allMask, strel('diamond',3));
+% erode the mask
+finalMask = imerode(finalMask, strel('diamond',1));
 
 % reconstruct an image with all the markers
-all(:,:,1) = uint8(allMask) .* noBack_r;
-all(:,:,2) = uint8(allMask) .* noBack_g;
-all(:,:,3) = uint8(allMask) .* noBack_b;
+all(:,:,1) = uint8(finalMask) .* imageRed;
+all(:,:,2) = uint8(finalMask) .* imageGreen;
+all(:,:,3) = uint8(finalMask) .* imageBlue;
 
 %% Labeling and identification
 
 % label the image
-[L,num] = bwlabel(allMask);
+[L,num] = bwlabel(finalMask);
 
 % get the centroids
 s = regionprops(L,'centroid', 'BoundingBox', 'area');
@@ -88,25 +102,35 @@ centroids = cat(1, s.Centroid);
 %   - as many rows as labels there are
 %   - 4 columns (one for the label number, 2 for the centroid pos, 1 for the
 %   color.
-listIndex = zeros(num,4);
+listMarkers = zeros(num,4);
+% initialize the max values of each channel and their index in the list
 maxRed = 0;
 maxIndRed = -1;
 maxGreen = 0;
 maxIndGreen = -1;
 maxBlue = 0;
 maxIndBlue = -1;
+
 for i = 1:num
     % LABEL NAME
-    listIndex (i,1) = i;
+    listMarkers (i,1) = i;
     % CENTROID POSITION
-    listIndex (i,2) = centroids(i, 1);
-    listIndex (i,3) = centroids(i, 2);
+    listMarkers (i,2) = centroids(i, 1);
+    listMarkers (i,3) = centroids(i, 2);
     % COLOR
     % if not all 3 channels are 0
-    % See the colors of the centroids
+    % See the colors of the centroid
     color = impixel (all, centroids(i,1), centroids(i,2));
     [maxColor,Index] = max(color);
-    listIndex(i,4) = Index;
+    
+    % If the color is   red     then put    1
+    %                   green               2
+    %                   blue                3
+    %                   none                0
+    listMarkers(i,4) = Index;
+    if (maxColor == 0)
+        listMarkers(i,4) = 0;
+    end
     
     % find the higher values
     % for red
@@ -135,51 +159,65 @@ for i = 1:num
 end
 
 %% Ploting and giving output
- figure, imshow (image);
- hold on
-% if maxIndRed ~= -1
-% plot (listIndex(maxIndRed,2), listIndex(maxIndRed,3),'r*')
-% hold on
-% end
-% if maxIndGreen ~= -1
-% plot (listIndex(maxIndGreen,2), listIndex(maxIndGreen,3),'g*')
-% hold on
-% end
-% if maxIndBlue ~= -1
-% plot (listIndex(maxIndBlue,2), listIndex(maxIndBlue,3),'b*')
-% end
-% hold off
+figure, imshow (image);
+hold on
 
-for i = 1:num
-    % establish criteria:
-    % - if the centroid is inside the marker
-    % - if the ratio width/heigth > 2.8
-    % - if the ratio width/heigth < 4.3
-    if (listIndex(i,4)~= 0 )
-        % plot red
+% If you want to plot only the higher marker of each color-----------------
+if maxIndRed ~= -1
+    plot (listMarkers(maxIndRed,2), listMarkers(maxIndRed,3),'r*')
+    hold on
+end
+if maxIndGreen ~= -1
+    plot (listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3),'g*')
+    hold on
+end
+if maxIndBlue ~= -1
+    plot (listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3),'b*')
+end
+hold off
+
+% If you want to plot all the detected markers ----------------------------
+% for i = 1:num
+%     % establish criteria:
+%     % - if the centroid is inside the marker
+%     if (listIndex(i,4)~= 0 )
+%         % plot red
 %         if (listIndex(i,4) == 1)
 %             plot (listIndex(i,2), listIndex(i,3),'r*')
 %             hold on
 %         end
-        % plot green
-        if (listIndex(i,4) == 2)
-            plot (listIndex(i,2), listIndex(i,3),'g*')
-            hold on
-        end
-        % plot blue
-        if (listIndex(i,4) == 3)
-            plot (listIndex(i,2), listIndex(i,3),'b*')
-            hold on
-        end
-    end
-end
+%         % plot green
+%         if (listIndex(i,4) == 2)
+%             plot (listIndex(i,2), listIndex(i,3),'g*')
+%             hold on
+%         end
+%         % plot blue
+%         if (listIndex(i,4) == 3)
+%             plot (listIndex(i,2), listIndex(i,3),'b*')
+%             hold on
+%         end
+%     end
+% end
 
 % Output: markersPosition -------------------------------------------------
-markersPos = zeros(num,2);
-for i = 1:num
-    if (listIndex(i,4)~= 0 )
-        markersPos(i,1) = listIndex(i,2);
-        markersPos(i,2) = listIndex(i,3);
-    end
+% markersPos has te position in 2D (x,y) of the red, green and blue markers
+% respectively
+
+markersPos = zeros(3,2);
+
+% red marker
+if maxIndRed~= -1
+    markersPos(1,:) = [listMarkers(maxIndRed,2), listMarkers(maxIndRed,3)];
 end
+
+% green marker
+if maxIndGreen~= -1
+    markersPos(2,:) = [listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3)];
+end
+
+% blue marker
+if maxIndBlue~= -1
+    markersPos(3,:) = [listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3)];
+end
+
 end
