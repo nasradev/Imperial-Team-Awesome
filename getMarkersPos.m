@@ -25,7 +25,7 @@ imageGreen  = image(:,:,2);
 imageBlue   = image(:,:,3);
 
 % Take off pixels with high values in the three RGB channels
-backgrThres = 160;
+backgrThres = 110; %depending on the light (image calibration)
 for i = 1:length(image(:,1,1))
     for j = 1:length(image(1,:,1))
         if (imageRed(i,j) > backgrThres ...
@@ -37,6 +37,11 @@ for i = 1:length(image(:,1,1))
         end
     end
 end
+
+% enhancement of contrast: equalization histogram
+%imageRed    = histeq(imageRed);
+% imageGreen  = histeq(imageGreen);
+% imageBlue   = histeq(imageBlue);
 
 % Generation of the mask --------------------------------------------------
 
@@ -81,7 +86,7 @@ satMask     = bwareafilt(satMask, [markerArea/2 inf]);
 finalMask = satMask & (redMask | greenMask | blueMask);
 
 % erode the mask
-finalMask = imerode(finalMask, strel('diamond',1));
+finalMask = imerode(finalMask, strel('diamond',5));
 
 % reconstruct an image with all the markers
 all(:,:,1) = uint8(finalMask) .* imageRed;
@@ -132,9 +137,27 @@ for i = 1:num
         listMarkers(i,4) = 0;
     end
     
+    % colors ordered in ascending order
+    sortedColor = sort(color);
+    
+    % if the two bigger colors are almost the same and red is low
+    % then its a glove so I put it at 0
+    % GLOVE
+    if (abs(sortedColor(2)-sortedColor(3)) < 10 && sortedColor(1) == color(1))
+        listMarkers(i,4) = 0;
+    end
+    
+    % Take off red stuff that is not the red marker
+    % the red marker has very low green and blue values
+    % RED BUT NOT A MARKER
+    if (Index == 1 && ~(sortedColor(1)< 30 && sortedColor(2) < 30))
+           % if it's detected as red marker but blue and green are very low
+        listMarkers(i,4) = 0;
+    end
+    
     % find the higher values
     % for red
-    if Index == 1
+    if listMarkers(i,4) == 1
         if maxColor > maxRed
             maxRed = maxColor;
             maxIndRed = i;
@@ -142,7 +165,7 @@ for i = 1:num
     end
     
     % for green
-    if Index == 2
+    if listMarkers(i,4) == 2
         if maxColor > maxGreen
             maxGreen = maxColor;
             maxIndGreen = i;
@@ -150,7 +173,7 @@ for i = 1:num
     end
     
     % for blue
-    if Index == 3
+    if listMarkers(i,4) == 3
         if maxColor > maxBlue
             maxBlue = maxColor;
             maxIndBlue = i;
@@ -173,6 +196,7 @@ if maxIndGreen ~= -1
 end
 if maxIndBlue ~= -1
     plot (listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3),'b*')
+    hold on
 end
 hold off
 
@@ -180,20 +204,20 @@ hold off
 % for i = 1:num
 %     % establish criteria:
 %     % - if the centroid is inside the marker
-%     if (listIndex(i,4)~= 0 )
+%     if (listMarkers(i,4)~= 0 )
 %         % plot red
-%         if (listIndex(i,4) == 1)
-%             plot (listIndex(i,2), listIndex(i,3),'r*')
+%         if (listMarkers(i,4) == 1)
+%             plot (listMarkers(i,2), listMarkers(i,3),'r*')
 %             hold on
 %         end
 %         % plot green
-%         if (listIndex(i,4) == 2)
-%             plot (listIndex(i,2), listIndex(i,3),'g*')
+%         if (listMarkers(i,4) == 2)
+%             plot (listMarkers(i,2), listMarkers(i,3),'g*')
 %             hold on
 %         end
 %         % plot blue
-%         if (listIndex(i,4) == 3)
-%             plot (listIndex(i,2), listIndex(i,3),'b*')
+%         if (listMarkers(i,4) == 3)
+%             plot (listMarkers(i,2), listMarkers(i,3),'b*')
 %             hold on
 %         end
 %     end
