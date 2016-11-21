@@ -64,7 +64,7 @@ satMask     = im2bw(imageSat, levelS);
 
 % Combination of RGB masks
 redMask = redMask & ~greenMask & ~blueMask;
-greenMask = greenMask & ~redMask & ~blueMask;
+greenMask = greenMask & ~redMask;% & ~blueMask;
 blueMask = blueMask & ~redMask; % blue marker usualy has green too
 
 % Elimitation of small objects --------------------------------------------
@@ -87,7 +87,7 @@ satMask     = bwareafilt(satMask, [markerArea/2 inf]);
 finalMask = satMask & (redMask | greenMask | blueMask);
 
 % erode the mask
-finalMask = imerode(finalMask, strel('diamond',5));
+finalMask = imerode(finalMask, strel('diamond',3));
 
 % reconstruct an image with all the markers
 all(:,:,1) = uint8(finalMask) .* imageRed;
@@ -100,7 +100,7 @@ all(:,:,3) = uint8(finalMask) .* imageBlue;
 [L,num] = bwlabel(finalMask);
 
 % get the centroids
-s = regionprops(L,'centroid', 'BoundingBox', 'area');
+s = regionprops(L,'centroid', 'area');
 centroids = cat(1, s.Centroid);
 
 % go through all the centroids and check to what color they correspond
@@ -166,6 +166,10 @@ for i = 1:num
     % find the higher values
     % for red
     if listMarkers(i,4) == 1
+        if (maxColor > maxRed2 && maxColor < maxRed)
+            maxRed2 = maxColor;
+            maxIndRed2 = i;
+        end
         if maxColor > maxRed
             maxRed2 = maxRed;
             maxRed = maxColor;
@@ -184,6 +188,10 @@ for i = 1:num
     
     % for blue
     if listMarkers(i,4) == 3
+        if (maxColor > maxBlue2 && maxColor < maxBlue)
+            maxBlue2 = maxColor;
+            maxIndBlue2 = i;
+        end
         if maxColor > maxBlue
             maxBlue2 = maxBlue;
             maxBlue = maxColor;
@@ -192,6 +200,29 @@ for i = 1:num
         end
     end
 end
+
+% Reorganizing the color markers by area
+% get areas
+area = cat(1, s.Area);
+
+% If 2 red markers are detected
+if (maxIndRed ~= -1 && maxIndRed2 ~= -1)
+    if area(maxIndRed) < area(maxIndRed2)
+        aux = maxIndRed;
+        maxIndRed = maxIndRed2;
+        maxIndRed2 = aux;
+    end
+end
+
+% If 2 blue markers are detected
+if (maxIndBlue ~= -1 && maxIndBlue2 ~= -1)
+    if area(maxIndBlue) < area(maxIndBlue2)
+        aux = maxIndBlue;
+        maxIndBlue = maxIndBlue2;
+        maxIndBlue2 = aux;
+    end
+end
+
 
 %% Ploting and giving output
 figure, imshow (image);
@@ -221,6 +252,8 @@ end
 hold off
 
 % If you want to plot all the detected markers ----------------------------
+% figure, imshow (image);
+% hold on
 % for i = 1:num
 %     % establish criteria:
 %     % - if the centroid is inside the marker
@@ -247,21 +280,26 @@ hold off
 % markersPos has te position in 2D (x,y) of the red, green and blue markers
 % respectively
 
-markersPos = zeros(3,2);
+markersPos = zeros(4,2);
 
-% red marker
+% red marker_1
 if maxIndRed~= -1
     markersPos(1,:) = [listMarkers(maxIndRed,2), listMarkers(maxIndRed,3)];
 end
 
+% red and blue avergaed_2
+if maxIndBlue2~= -1 && maxIndRed2~= -1
+markersPos(2,:) = ([listMarkers(maxIndBlue2,2), listMarkers(maxIndBlue2,3)]+[listMarkers(maxIndRed2,2), listMarkers(maxIndRed2,3)])*0.5;
+end
+
 % green marker
 if maxIndGreen~= -1
-    markersPos(2,:) = [listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3)];
+    markersPos(3,:) = [listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3)];
 end
 
 % blue marker
 if maxIndBlue~= -1
-    markersPos(3,:) = [listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3)];
+    markersPos(4,:) = [listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3)];
 end
 
 end
