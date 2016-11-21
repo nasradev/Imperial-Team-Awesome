@@ -1,7 +1,8 @@
 function [markersPos] = getMarkersPos(image)
 % input: image you want to process
 % output: a matrix called markersPos with the position of the markers, one
-% for each color
+% for each color.
+% we get two red markers, two blue and one green
 
 close all;
 
@@ -110,11 +111,18 @@ centroids = cat(1, s.Centroid);
 listMarkers = zeros(num,4);
 % initialize the max values of each channel and their index in the list
 maxRed = 0;
+maxRed2 = 0;
 maxIndRed = -1;
+maxIndRed2 = -1;
+
 maxGreen = 0;
 maxIndGreen = -1;
+
 maxBlue = 0;
+maxBlue2 = 0;
 maxIndBlue = -1;
+maxIndBlue2 = -1;
+
 
 for i = 1:num
     % LABEL NAME
@@ -159,7 +167,9 @@ for i = 1:num
     % for red
     if listMarkers(i,4) == 1
         if maxColor > maxRed
+            maxRed2 = maxRed;
             maxRed = maxColor;
+            maxIndRed2 = maxIndRed;
             maxIndRed = i;
         end
     end
@@ -175,7 +185,9 @@ for i = 1:num
     % for blue
     if listMarkers(i,4) == 3
         if maxColor > maxBlue
+            maxBlue2 = maxBlue;
             maxBlue = maxColor;
+            maxIndBlue2 = maxIndBlue;
             maxIndBlue = i;
         end
     end
@@ -189,6 +201,10 @@ hold on
 if maxIndRed ~= -1
     plot (listMarkers(maxIndRed,2), listMarkers(maxIndRed,3),'r*')
     hold on
+    if maxIndRed2 ~= -1
+        plot (listMarkers(maxIndRed2,2), listMarkers(maxIndRed2,3),'ro')
+        hold on
+    end
 end
 if maxIndGreen ~= -1
     plot (listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3),'g*')
@@ -197,6 +213,10 @@ end
 if maxIndBlue ~= -1
     plot (listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3),'b*')
     hold on
+    if maxIndBlue2 ~= -1
+        plot (listMarkers(maxIndBlue2,2), listMarkers(maxIndBlue2,3),'bo')
+        hold on
+    end
 end
 hold off
 
