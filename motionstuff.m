@@ -1,6 +1,6 @@
 clear all;
 close all;
-filename='freakinMarkers.MOV';
+filename='video_webcam1.mp4';
 
 %% Compute Optical Flow Using Lucas-Kanade derivative of Gaussian
  vidReader = VideoReader(filename);
@@ -76,6 +76,13 @@ for f =1:40% number_of_frames
             end
         end        
         
+        %% seed segmentation
+        % find the average point
+%         x = x_loc1(1);
+%         y = y_loc1(1);
+%         segmentedIm = seedSegment(frameGray,y, x);
+%         imshow(segmentedIm);
+        
 %% Set clustered regions to white
     blackI = zeros(size(image));
     juanaMask=insertShape(blackI, 'FilledPolygon', poly1,'Color','White','Opacity',1);
@@ -92,13 +99,19 @@ for f =1:40% number_of_frames
          figure, 
          subplot(1,2,1), imshow(juana),
          subplot(1,2,2), imshow(image), hold on
-         plot(markersPos(1,1), markersPos(1,2), 'r*'), hold on,
-         plot(markersPos(2,1), markersPos(2,2), 'g*'), hold on,
-         plot(markersPos(3,1), markersPos(3,2), 'b*'), hold off
+%          plot(markersPos(1,1), markersPos(1,2), 'r*'), hold on,
+%          plot(markersPos(2,1), markersPos(2,2), 'g*'), hold on,
+%          plot(markersPos(3,1), markersPos(3,2), 'b*'), hold off
 
-         pause(1)
+plot( x_loc,y_loc, 'o'), hold on,
+plot( x2_loc,y2_loc, 'o'), hold on,
+plot( x3_loc,y3_loc, 'o'), hold off
+
+         pause(0.5)
 %          figure, imshow(image)
 %          hold on
+
+
 
     end       
 end
