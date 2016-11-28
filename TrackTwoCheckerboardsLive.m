@@ -1,7 +1,7 @@
-function TrackTwoCheckerboardsLive( cameraParams )
+function [time, p0, p1, p2] = TrackTwoCheckerboardsLive( cameraParams, squareSize )
 %% Input:
 %% 1. cameraParams object (from camera calibration) 
-
+imaqreset
 %Set some constants
 yellow = uint8([255 255 0]);
 red = uint8([255 0 0]);
@@ -23,8 +23,20 @@ try
     prevGroundX = 0;
     prevGroundY = 0;
     
+    time = [];
+    %Points = zeros(3,5,1);
+    count = 0;
     %Read each frame of the input video:
-    while islogging(obj);              
+    while islogging(obj); 
+        
+        count = count + 1;
+        
+        %Initialize Variables
+        p0(:, count) = zeros(1,5);
+        p1(:, count) = zeros(1,5);
+        p2(:, count) = zeros(1,5);
+        
+        tic %get computational time
         data = getdata(obj,1);
         flushdata(obj);
         %Get the checkerboard points in the frame
@@ -74,7 +86,16 @@ try
                   firstColour = red;
                   secondColour = yellow;
               end
-              
+                [imagePoints, boardSize] = detectCheckerboardPoints(data);
+                if length(imagePoints) > 6
+                    worldPoints = generateCheckerboardPoints(boardSize, squareSize);
+                    returnPoints = [imagePoints(1,1) imagePoints(1,2) 0 worldPoints(1,1) worldPoints(1,2)
+                    imagePoints(boardSize(1)-1,1) imagePoints(boardSize(1)-1,2) 0 worldPoints(boardSize(1)-1,1) worldPoints(boardSize(1)-1,2)
+                    imagePoints(boardSize(2)-1,1) imagePoints(boardSize(2)-1,2) 0 worldPoints(boardSize(2)-1,1) worldPoints(boardSize(2)-1,2)];
+                end
+              p0(:,count) = returnPoints (1,:)';
+              p1(:,count) = returnPoints (2,:)';
+              p2(:,count) = returnPoints (3,:)';
               %Insert the circles outlining the second checkerboard
               shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
     'CustomBorderColor',secondColour);
@@ -135,14 +156,15 @@ try
         %set(h,'Cdata',I);
         set(h,'Cdata',data);
         drawnow;
+        time = [time toc];
     end
-
+time = mean(time);
 catch err
     % This attempts to take care of things when the figure is closed
     stop(obj);
     imaqreset
     disp('Cleaned up')
-    rethrow(err);
+    %rethrow(err);
 end    
 end
 
