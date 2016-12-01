@@ -25,7 +25,7 @@ while hasFrame(obj);
     
     % Get the marker positions:
     [redM, yellowM, greenM, blueM] = getMarkerPos(obj);
-    %Red and Yellow in tool 1, Green and Blue in tool 2
+    % Red and Yellow in tool 1, Green and Blue in tool 2
     
 end %hasFrame
 
