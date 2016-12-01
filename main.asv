@@ -33,13 +33,13 @@ while hasFrame(obj);
      
     % Draw mask on the second cboard and find the next one
      temp_data = hideCheckerboard(data,...
-         [secondBoard.imagePoints(1,:);secondBoard.imagePoints(end,:)]);
+         [firstBoard.imagePoints(1,:);firstBoard.imagePoints(end,:)]);
      
      % Find the third board (we expect 2 hands and a base):
      thirdBoard = getBoardObject(temp_data, squareSize);
     
      % Get the marker positions:
-     %markersPos = getMarkersPos(data);
+     markersPos = getMarkersPos(data);
      % Red and Yellow in tool 1, Green and Blue in tool 2
     else
         display('no checkerboards found')

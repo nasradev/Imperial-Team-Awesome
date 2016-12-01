@@ -3,6 +3,7 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
 
     blue = uint8([0 0 255]);
     red = uint8([255 0 0]);
+    black = uint8([0 0 0]);
     
     % Get the checkerboard points in the frame
     [imagePoints, boardSize] = detectCheckerboardPoints(data);
@@ -12,7 +13,7 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
     if length(imagePoints) > 6
 
         % Set default colours to the first and second patterns detected.
-        colour = blue;
+        colour = black;
 
         % Find the the colour of the detected checkerboard
         pointX = round(imagePoints(1,1) + (imagePoints(boardSize(1),1) - imagePoints(1,1)) / 2);
@@ -31,6 +32,11 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
         threePoints = ...
            [imagePoints(xBasePoint, 1) imagePoints(xBasePoint, 2) 0 worldPoints(xBasePoint,1) worldPoints(xBasePoint,2)
             imagePoints(xBasePoint+1, 1) imagePoints(xBasePoint+1, 2) 0 worldPoints(xBasePoint+1,1) worldPoints(xBasePoint+1,2)
-            imagePoints(yPoint,1) imagePoints(yPoint,2) 0 worldPoints(yPoint,1) worldPoints(yPoint,2)]
+            imagePoints(yPoint,1) imagePoints(yPoint,2) 0 worldPoints(yPoint,1) worldPoints(yPoint,2)];
+    else
+        imagePoints = [-1 -1]; 
+        worldPoints = [-1 -1];
+        colour = [-1 -1 -1];
+        threePoints = [-1 -1 -1 -1 -1; -1 -1 -1 -1 -1; -1 -1 -1 -1 -1];
     end
 end
