@@ -247,7 +247,7 @@ for i = 1:numBlue
         end
     end
 end
-display('endBlue')
+endBlue
 % Yellow --------------------------------------------------------------------
 % label the image
 %[LYellow,numYellow] = bwlabel(yellowMask);
@@ -511,4 +511,5 @@ m1 = [0 0 0 0 d1];
 m2 = [x2 y2 0 0 d2];
 m3 = [x3 y3 0 0 d3];
 m4 = [x4 y4 0 0 d4];
+pause
 end

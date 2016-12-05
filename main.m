@@ -51,7 +51,9 @@ while hasFrame(obj);
      end
      hold off;
      % Get the marker positions:
+     tic
      [red yellow green blue] = getMarkerPos(data);
+     toc
      % Red and Yellow in tool 1, Green and Blue in tool 2
     else
         display('no checkerboards found')
