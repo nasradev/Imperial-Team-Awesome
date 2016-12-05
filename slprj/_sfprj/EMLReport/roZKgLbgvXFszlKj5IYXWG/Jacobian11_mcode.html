@@ -1,0 +1,11 @@
+<!-- saved from url=(0014)about:internet -->
+<pre class="code">
+<span class="srcline"><span class="lineno"><a href="1,1" id="srcline1">1</a></span><span class="line"><span class="keyword">function</span> <span class="var type0" id="S2T0U3">hats</span> = Jacobian1(<span class="var type1" id="S3T1U6">dots</span>, <span class="var type1" id="S4T2U7">m0</span> ,<span class="var type1" id="S5T2U8">m1</span>, <span class="var type1" id="S6T3U9">s</span>, <span class="var type1" id="S7T4U10">t</span>, <span class="var type1" id="S8T5U11">x</span>, <span class="var type1" id="S9T6U12">k</span>, <span class="var type1" id="S10T7U13">a</span>)</span></span>
+<span class="srcline"><span class="lineno"><a href="1,2" id="srcline2">2</a></span><span class="line"></span></span>
+<span class="srcline"><span class="lineno"><a href="1,3" id="srcline3">3</a></span><span class="line"></span></span>
+<span class="srcline"><span class="lineno"><a href="1,4" id="srcline4">4</a></span><span class="line"><span class="var type0" id="S11T0U16">J</span> = <span class="message error" id="M1F1C"><span class="fcn" id="F2N2:B18">Jac1</span>(<span class="var type1" id="S10T7U19">a</span>,<span class="var type1" id="S9T6U20">k</span>,<span class="var type1" id="S4T2U21">m0</span>,<span class="var type1" id="S5T2U22">m1</span>,<span class="var type1" id="S6T3U23">s</span>,<span class="var type1" id="S7T4U24">t</span>,<span class="var type1" id="S8T5U25">x</span>)</span>;</span></span>
+<span class="srcline"><span class="lineno"><a href="1,5" id="srcline5">5</a></span><span class="line"></span></span>
+<span class="srcline"><span class="lineno"><a href="1,6" id="srcline6">6</a></span><span class="line"><span class="var type0" id="S2T0U28">hats</span> = pinv(<span class="var type0" id="S11T0U32"><span class="message error" id="M2F1C">J</span></span>)*<span class="var type0" id="S3T0U33">dots</span>;</span></span>
+<span class="srcline"><span class="lineno"><a href="1,7" id="srcline7">7</a></span><span class="line"></span></span>
+<span class="srcline"><span class="lineno"><a href="1,8" id="srcline8">8</a></span><span class="line"><span class="keyword">end</span></span></span>
+</pre>
