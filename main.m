@@ -1,9 +1,116 @@
+%main code
+%function main()
+clear
+clc
+close all 
+figure,
+%%Definitions
+
+%Size of checkerboard squares
+squareSize = 5.4;
+
+%Load up the camera parameters:
+load('naskosCameraParamsLaptop.mat') %or whatever
+
+%Set the video file and define output video object
+obj = VideoReader('IMG_5947.MOV');
+vidWidth = obj.Width;
+vidHeight = obj.Height;
+mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
+
+%Define Data
+firstBoard.colour = zeros(1,3);
+secondBoard.colour = zeros(1,3);
+thirdBoard.colour = zeros(1,3);
+
+counter = 0;
+% Go through the video frames
+while hasFrame(obj);  
+    counter = counter + 1;
+    data = readFrame(obj);
+    % Get the first checkerboard:
+    firstBoard = getBoardObject(data, squareSize);
+    
+    if firstBoard.imagePoints(1,1) > -1
+    
+     % Draw mask on the first cboard and find the next one
+     temp_data = hideCheckerboard(data,...
+         [firstBoard.imagePoints(1,:);firstBoard.imagePoints(end,:)]);
+     
+     %Plot the points (TODO remove)
+     image(data);
+     hold on
+     scatter(firstBoard.imagePoints(:,1),firstBoard.imagePoints(:,2));
+     
+     % Find the second board
+     secondBoard = getBoardObject(temp_data, squareSize);
+     
+     if secondBoard.imagePoints(1,1) > -1
+      
+      scatter(secondBoard.imagePoints(:,1),secondBoard.imagePoints(:,2));
+      
+      % Draw mask on the second cboard and find the next one
+      temp_data = hideCheckerboard(temp_data,...
+         [secondBoard.imagePoints(1,:);secondBoard.imagePoints(end,:)]);
+      % Find the third board (we expect 2 hands and a base):
+      thirdBoard = getBoardObject(temp_data, squareSize);
+      if thirdBoard.imagePoints(1,1) > -1
+       scatter(thirdBoard.imagePoints(:,1),thirdBoard.imagePoints(:,2));
+      end
+     end
+     hold off;
+     % Get the marker positions:
+     tic
+     [red, yellow, green, blue] = getMarkerPos(data);
+     m0(counter,:) = red;
+     m1(counter,:) = yellow;
+%      if mean(red) == 0 && counter > 1
+%         m0(counter,:) = m0(counter-1,:);
+%      end
+%      if mean(yellow) && counter > 1
+%         m1(counter,:) = m1(counter-1,:);
+%      end
+     toc
+     p0(counter,:) = zeros(5,1);%first step
+     p1(counter,:) = zeros(5,1);
+     p2(counter,:) = zeros(5,1);
+%      
+%      if counter > 1 %next steps
+%         p0(counter,:) = p0(counter-1,:);
+%         p1(counter,:) = p1(counter-1,:);
+%         p2(counter,:) = p2(counter-1,:);
+%      end
+     % Red and Yellow in tool 1, Green and Blue in tool 2
+    else
+        display('no checkerboards found')
+    end
+    if firstBoard.colour(3) == 255
+        p0(counter,:) = firstBoard.threePoints(1,:);
+        p1(counter,:) = firstBoard.threePoints(2,:);
+        p2(counter,:) = firstBoard.threePoints(3,:);
+    elseif secondBoard.colour(3) == 255
+        p0(counter,:) = firstBoard.threePoints(1,:);
+        p1(counter,:) = firstBoard.threePoints(2,:);
+        p2(counter,:) = firstBoard.threePoints(3,:);
+    elseif thirdBoard.colour(3) == 255
+        p0(counter,:) = firstBoard.threePoints(1,:);
+        p1(counter,:) = firstBoard.threePoints(2,:);
+        p2(counter,:) = firstBoard.threePoints(3,:);
+    end
+end %hasFrame
+
+%Output the results to video:
+%v = VideoWriter('C:\Group Project\Videos\output2');
+%open(v)
+%writeVideo(v,mov)
+%close(v)
+
 %% Variables Definition
-load('MUpad') %load the variables generated in mupad
+%load('MUpad') %load the variables generated in mupad
 
 %Hand Dimentions
-tr = 1;
-a = 0;
+tr = 100;%mm
+a = 15/180*pi;
 
 
 %% Video
@@ -20,32 +127,29 @@ k = [0.70775, 0, 3.2946, 0; 0, 0.7041571, 2.273255, 0; 0, 0, 1, 0;...
 
 load('giovsCameraParamsLaptop')
 
-squareSize = 4; %size of the scheckerboard squares in mm
+squareSize = 5.4; %size of the scheckerboard squares in mm
 
-[time, p0, p1, p2] = TrackTwoCheckerboardsLive( cameraParams, squareSize );
+% [time, p0, p1, p2] = TrackTwoCheckerboardsLive( cameraParams, squareSize );
 
 
 
 %% Data
 
-dt = mean(time);
-T = dt*length(p0);
+dt = 0.01;%mean(time);
+T = dt*counter;
 t = dt : dt : T;
 
-P0 = [t', p0(3:5,:)'];
-P1 = [t', p1(3:5,:)'];
-P2 = [t', p2(3:5,:)'];
+P0 = [t', p0(:,3:5)];%checkerboard reference (local)
+P1 = [t', p1(:,3:5)];
+P2 = [t', p2(:,3:5)];
 
-Y = [t', p0(1:2,:)', p1(1:2,:)', p2(1:2,:)'];
+Y = [t', p0(:,1:2), p1(:,1:2),p2(:,1:2)];%measure (camera frame)
 
-%%%%%Trial%%%%%
-m0 = zeros(5, length(p0));
-m1 = m0;
-%%%%%%%%%%%%%%%
-M0 = [t', m0(3:5,:)'];
-M1 = [t', m1(3:5,:)'];
 
-Y1 = [t', m0(1:2,:)', m1(1:2,:)'];
+M0 = [t', m0(:,3:5)];%tool reference (local)
+M1 = [t', m1(:,3:5)];
+
+Y1 = [t', m0(:,1:2), m1(:,1:2)];%measure (camer frame)
 
 %% Checkerboard 1 State Evolution
 %F = double(F); %state evolution
@@ -82,22 +186,22 @@ sim('trackingSim')
 %% Data Analysis
 figure(1) %Measure Plot
 subplot(3,2,1)
-plot(t, Y(:,1), t, hatY.data(2:end,1), '--')
+plot(t, Y(:,2), t, hatY.data(2:end,1), '--')
 %ylim([0,1e3])
 subplot(3,2,2)
-plot(t, Y(:,2), t, hatY.data(2:end,2), '--')
+plot(t, Y(:,3), t, hatY.data(2:end,2), '--')
 %ylim([0,1e3])
 subplot(3,2,3)
-plot(t, Y(:,3), t, hatY.data(2:end,3), '--')
+plot(t, Y(:,4), t, hatY.data(2:end,3), '--')
 %ylim([0,1e3])
 subplot(3,2,4)
-plot(t, Y(:,4), t, hatY.data(2:end,4), '--')
+plot(t, Y(:,5), t, hatY.data(2:end,4), '--')
 %ylim([0,1e3])
 subplot(3,2,5)
-plot(t, Y(:,5), t, hatY.data(2:end,5), '--')
+plot(t, Y(:,6), t, hatY.data(2:end,5), '--')
 %ylim([0,1e3])
 subplot(3,2,6)
-plot(t, Y(:,6), t, hatY.data(2:end,6), '--')
+plot(t, Y(:,7), t, hatY.data(2:end,6), '--')
 %ylim([0,1e3])
 
 
@@ -145,16 +249,16 @@ plot(t, hatX.data(2:end,6))
 
 figure(4) %Measure Plot
 subplot(2,2,1)
-plot(t, Y1(:,1), t, hatY1.data(2:end,1), '--')
+plot(t, Y1(:,2), t, hatY1.data(2:end,1), '--')
 %ylim([0,1e3])
 subplot(2,2,2)
-plot(t, Y1(:,2), t, hatY1.data(2:end,2), '--')
+plot(t, Y1(:,3), t, hatY1.data(2:end,2), '--')
 %ylim([0,1e3])
 subplot(2,2,3)
-plot(t, Y1(:,3), t, hatY1.data(2:end,3), '--')
+plot(t, Y1(:,4), t, hatY1.data(2:end,3), '--')
 %ylim([0,1e3])
 subplot(2,2,4)
-plot(t, Y1(:,4), t, hatY1.data(2:end,4), '--')
+plot(t, Y1(:,5), t, hatY1.data(2:end,4), '--')
 %ylim([0,1e3])
 
 
@@ -187,3 +291,5 @@ plot(t, hatX1.data(2:end,3))
 subplot(2,2,4)
 plot(t, hatX1.data(2:end,4))
 %ylim([0,1e3])
+
+%end %main

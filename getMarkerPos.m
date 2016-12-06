@@ -247,42 +247,42 @@ for i = 1:numBlue
         end
     end
 end
-
+display('endBlue')
 % Yellow --------------------------------------------------------------------
 % label the image
-[LYellow,numYellow] = bwlabel(yellowMask);
+%[LYellow,numYellow] = bwlabel(yellowMask);
 
 % get the centroids
-sYellow= regionprops(LYellow,'centroid', 'BoundingBox', 'area');
-centroidsYellow = cat(1, sYellow.Centroid);
+%sYellow= regionprops(LYellow,'centroid', 'BoundingBox', 'area');
+%centroidsYellow = cat(1, sYellow.Centroid);
 %areas = cat(1, s.Area);
 % create a matrix with
 %   - as many rows as labels there are
 %   - 4 columns (one for the label number, 2 for the centroid pos, 1 for the
 %   color.
-listMarkersYellow= zeros(numYellow,4);
+%listMarkersYellow= zeros(numYellow,4);
 
 % initialize the max values of each channel and their index in the list
 % maxYellow = 0;
 % maxIndYellow = -1;
 
-for i = 1:numYellow
-    % LABEL NAME
-    listMarkersYellow(i,1) = i;
-    
-    % CENTROID POSITION
-    listMarkersYellow(i,2) = centroidsYellow(i, 1);
-    listMarkersYellow(i,3) = centroidsYellow(i, 2);
-
-    color = impixel (all, centroidsYellow(i,1), centroidsYellow(i,2));
-    [maxColor,Index] = max(color);
-    
-    listMarkersYellow(i,4) = 4;
-    if (maxColor == 0)
-        listMarkersYellow(i,4) = 0;
-    end
-   
-end
+% for i = 1:numYellow
+%     % LABEL NAME
+%     listMarkersYellow(i,1) = i;
+%     
+%     % CENTROID POSITION
+%     listMarkersYellow(i,2) = centroidsYellow(i, 1);
+%     listMarkersYellow(i,3) = centroidsYellow(i, 2);
+% 
+%     color = impixel (all, centroidsYellow(i,1), centroidsYellow(i,2));
+%     [maxColor,Index] = max(color);
+%     
+%     listMarkersYellow(i,4) = 4;
+%     if (maxColor == 0)
+%         listMarkersYellow(i,4) = 0;
+%     end
+%    
+% end
 % --------------------------------------------------------
 % maxYellow=0;
 % maxIndYellow = -1;
@@ -381,27 +381,27 @@ end
 % end
 
 %% Ploting and giving output
-% figure, imshow (image);
-% hold on
-% 
-% % If you want to plot only the higher marker of each color-----------------
-% if maxIndRed ~= -1
-%     plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
+ imshow (image);
+hold on
+
+% If you want to plot only the higher marker of each color-----------------
+if maxIndRed ~= -1
+    plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
+    hold on
+end
+% if maxIndYellow ~= -1
+%     plot (listMarkers(maxIndYellow,2), listMarkers(maxIndYellow,3),'y*')
 %     hold on
 % end
-% % if maxIndYellow ~= -1
-% %     plot (listMarkers(maxIndYellow,2), listMarkers(maxIndYellow,3),'y*')
-% %     hold on
-% % end
-% if maxIndGreen ~= -1
-%     plot (listMarkersGreen(maxIndGreen,2), listMarkersGreen(maxIndGreen,3),'g*')
-%     hold on
-% end
-% if maxIndBlue ~= -1
-%     plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),...
-%         listMarkersBlue(maxIndBlue2,2), listMarkersBlue(maxIndBlue2,3),'b*')
-%     hold on
-% end
+if maxIndGreen ~= -1
+    plot (listMarkersGreen(maxIndGreen,2), listMarkersGreen(maxIndGreen,3),'g*')
+    hold on
+end
+if maxIndBlue ~= -1
+    plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),...
+        listMarkersBlue(maxIndBlue2,2), listMarkersBlue(maxIndBlue2,3),'b*')
+    hold on
+end
 
 
 % If you want to plot all the detected markers ----------------------------
@@ -511,5 +511,4 @@ m1 = [0 0 0 0 d1];
 m2 = [x2 y2 0 0 d2];
 m3 = [x3 y3 0 0 d3];
 m4 = [x4 y4 0 0 d4];
-pause
 end
