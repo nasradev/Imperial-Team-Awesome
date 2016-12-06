@@ -1,4 +1,4 @@
-function [T] = getAuroraTranslation(M)
+function [T] = getAuroraTranslation(record)
 
 % M = tdfread('take1_001.csv',',');
 % M = tdfread(fileID,',');
@@ -9,14 +9,14 @@ toolQuat = zeros(4);
 toolTrans = zeros(3);
 
 % tool checkerboard quaternions and translations
-toolTrans(1) = M.Tx1; % Tx
-toolTrans(2) = M.Ty1; % Ty
-toolTrans(3) = M.Tz1; % Tz
+toolTrans(1) = record(1); % Tx
+toolTrans(2) = record(2); % Ty
+toolTrans(3) = record(3); % Tz
 
-toolQuat(1) = M.Q01; % Q0
-toolQuat(2) = M.Qx1; % Qx
-toolQuat(3) = M.Qy1; % Qy
-toolQuat(4) = M.Qz1; % Qz
+toolQuat(1) = record(4); % Q0
+toolQuat(2) = record(5); % Qx
+toolQuat(3) = record(6); % Qy
+toolQuat(4) = record(7); % Qz
 
 % quaternions to euler angles (ZYX)
 toolEul = quat2eul(toolQuat);
