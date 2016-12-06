@@ -23,7 +23,7 @@ thirdBoard.colour = zeros(1,3);
 
 
 % Go through the video frames
-obj.CurrentTime = 1;
+obj.CurrentTime = 6;
 while hasFrame(obj);  
     data = readFrame(obj);
     
@@ -52,7 +52,6 @@ while hasFrame(obj);
     'CustomBorderColor',firstBoard.colour);
      circle = int32([firstBoard.imagePoints(1,1) firstBoard.imagePoints(1,2) 40; 0 0 0]);
      data = step(shapeInserter, data, circle);
-     firstBoard.colour
      
      % Find the second board
      secondBoard = getBoardObject(temp_data, squareSize);
@@ -63,7 +62,6 @@ while hasFrame(obj);
     'CustomBorderColor',secondBoard.colour);
      circle = int32([secondBoard.imagePoints(1,1) secondBoard.imagePoints(1,2) 40; 0 0 0]);
      data = step(shapeInserter, data, circle); 
-     secondBoard.colour
       % Draw mask on the second cboard and find the next one
       temp_data = hideCheckerboard(temp_data,...
          [secondBoard.imagePoints(1,:);secondBoard.imagePoints(end,:)]);
@@ -87,7 +85,7 @@ while hasFrame(obj);
 end %hasFrame
 
 %Output the results to video:
-v = VideoWriter('C:\Group Project\Videos\output8');
+v = VideoWriter('C:\Group Project\Videos\output10');
 open(v)
 writeVideo(v,mov)
 close(v)

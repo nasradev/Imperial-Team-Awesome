@@ -10,8 +10,8 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
     % Ignore any patterns with fewer than 6 imagePoints as they
     % are likely to be artefacts
     if (length(imagePoints) > 6) && (boardSize(1) > 0) && ...
-        (abs(max(imagePoints(:,1)) - min(imagePoints(:,1))) > 5) && ...
-        (abs(max(imagePoints(:,2)) - min(imagePoints(:,2))) > 5)
+        (abs(imagePoints(1,1) - imagePoints(end,1)) * ...
+        abs(imagePoints(1,2) - imagePoints(end,2)) > 300 )
         worldPoints = generateCheckerboardPoints(boardSize, squareSize);
 
         % Set default colours to the first and second patterns detected.
@@ -32,7 +32,6 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
         rgb(1) = max(min(data(yrange,xrange,1)));
         rgb(2) = max(min(data(yrange,xrange,2)));
         rgb(3) = max(min(data(yrange,xrange,3)));
-        rgb
         
         if (rgb(3) > (rgb(2) + 10)) && (rgb(3) > (rgb(1) + 10))
            colour = blue;
