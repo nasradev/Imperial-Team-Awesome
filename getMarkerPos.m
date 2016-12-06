@@ -382,26 +382,26 @@ end
 % end
 
 %% Ploting and giving output
-% figure, imshow (image);
-% hold on
-% 
-% % If you want to plot only the higher marker of each color-----------------
-% if maxIndRed ~= -1
-%     plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
-%     hold on
-% end
-% if maxIndYellow ~= -1
-%     plot (listMarkersYellow(maxIndYellow,2), listMarkersYellow(maxIndYellow,3),'y*')
-%     hold on
-% end
-% if maxIndGreen ~= -1
-%     plot (listMarkersGreen(maxIndGreen,2), listMarkersGreen(maxIndGreen,3),'g*')
-%     hold on
-% end
-% if maxIndBlue ~= -1
-%     plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),'b*')
-%     hold on
-% end
+ imshow (image);
+hold on
+
+% If you want to plot only the higher marker of each color-----------------
+if maxIndRed ~= -1
+    plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
+    hold on
+end
+if maxIndYellow ~= -1
+    plot (listMarkersYellow(maxIndYellow,2), listMarkersYellow(maxIndYellow,3),'y*')
+    hold on
+end
+if maxIndGreen ~= -1
+    plot (listMarkersGreen(maxIndGreen,2), listMarkersGreen(maxIndGreen,3),'g*')
+    hold on
+end
+if maxIndBlue ~= -1
+    plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),'b*')
+    hold on
+end
 
 
 % If you want to plot all the detected markers ----------------------------

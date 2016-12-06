@@ -1,11 +1,11 @@
 % Load the video
 close all;
 clear;
-video = VideoReader('video_webcam11.mp4');
-video.CurrentTime = 2.00;
+video = VideoReader('IMG_5947.MOV');
+% video.CurrentTime = 2.00;
 while hasFrame(video)
     % Get a single framec
     imagen = readFrame(video);
-    makersPos = getMarkersPos(imagen);
-    pause(0.5)
+    [red yellow bla blah] = getMarkerPos(imagen);
+
 end
