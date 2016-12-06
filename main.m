@@ -3,7 +3,6 @@
 clear
 clc
 close all 
-figure,
 %%Definitions
 
 %Size of checkerboard squares
@@ -30,6 +29,20 @@ while hasFrame(obj);
     data = readFrame(obj);
     % Get the first checkerboard:
     firstBoard = getBoardObject(data, squareSize);
+    
+    
+    % Get the marker positions:
+    tic
+    [red, yellow, green, blue] = getMarkerPos(data);
+    m0(counter,:) = red;
+    m1(counter,:) = yellow;
+    if mean(red(1:2)) == 0 && counter > 1
+        m0(counter,:) = m0(counter-1,:);
+    end
+    if mean(yellow(1:2)) == 0 && counter > 1
+        m1(counter,:) = m1(counter-1,:);
+    end
+    toc
     
     if firstBoard.imagePoints(1,1) > -1
     
@@ -58,22 +71,7 @@ while hasFrame(obj);
        scatter(thirdBoard.imagePoints(:,1),thirdBoard.imagePoints(:,2));
       end
      end
-     hold off;
-     % Get the marker positions:
-     tic
-     [red, yellow, green, blue] = getMarkerPos(data);
-     m0(counter,:) = red;
-     m1(counter,:) = yellow;
-%      if mean(red) == 0 && counter > 1
-%         m0(counter,:) = m0(counter-1,:);
-%      end
-%      if mean(yellow) && counter > 1
-%         m1(counter,:) = m1(counter-1,:);
-%      end
-     toc
-     p0(counter,:) = zeros(5,1);%first step
-     p1(counter,:) = zeros(5,1);
-     p2(counter,:) = zeros(5,1);
+     %hold off;
 %      
 %      if counter > 1 %next steps
 %         p0(counter,:) = p0(counter-1,:);
@@ -84,6 +82,11 @@ while hasFrame(obj);
     else
         display('no checkerboards found')
     end
+    
+    p0(counter,:) = zeros(5,1);%first step
+    p1(counter,:) = zeros(5,1);
+    p2(counter,:) = zeros(5,1);
+    
     if firstBoard.colour(3) == 255
         p0(counter,:) = firstBoard.threePoints(1,:);
         p1(counter,:) = firstBoard.threePoints(2,:);
@@ -125,7 +128,7 @@ k = [0.70775, 0, 3.2946, 0; 0, 0.7041571, 2.273255, 0; 0, 0, 1, 0;...
 % 
 % yellow = uint8([255 255 0]);
 
-load('giovsCameraParamsLaptop')
+%load('giovsCameraParamsLaptop')
 
 squareSize = 5.4; %size of the scheckerboard squares in mm
 
@@ -176,8 +179,8 @@ C1 = [eye(4), zeros(4,4)];
 %% Gain
 load('K')
 %Ksys = ss(K);
-[Ak, Bk, Ck, Dk] = ssdata(K);
-[Ak_1, Bk_1, Ck_1, Dk_1] = ssdata(K_1);
+[Ak, Bk, Ck, Dk] = ssdata(K1);
+[Ak_1, Bk_1, Ck_1, Dk_1] = ssdata(K2);%ssdata(K_1);
 
 
 %% Simulation

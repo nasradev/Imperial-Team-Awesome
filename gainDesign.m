@@ -2,19 +2,30 @@
 close all
 s = tf('s');
 
-Gol = 1/s^3;
+Gol1 = 1/s^3;
+Gol2 = 1/s^2;
+
 K1 = (s + 5e-1)^2/(s + 5e0)^2;
+K2 = (s + 5e-1)^1/(s + 5e0)^1;
 
 figure(1)
-rlocus(K1*Gol)
+subplot(2,1,1)
+rlocus(K1*Gol1)
+subplot(2,1,2)
+rlocus(K2*Gol2)
 
-K2 = 3e1*K1;
-K = K2*eye(6);
-K_1 = 3*K2*eye(4);
+K1 = 3e1*K1;
+K2 = 9e1*K2;
 
-Gcl = feedback(K2*Gol, 1);
+Gcl1 = feedback(K1*Gol1, 1);
+Gcl2 = feedback(K1*Gol2, 1);
 
 figure(2)
-step(Gcl)
+subplot(2,1,1)
+step(Gcl1)
+subplot(2,1,2)
+step(Gcl2)
 
-save('K', 'K', 'K_1');
+K1 = K1*eye(6);
+K2 = K2*eye(4);
+save('K', 'K1', 'K2');
