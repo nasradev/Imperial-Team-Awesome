@@ -4,7 +4,7 @@ function [m1,m2,m3,m4] = getMarkerPos(image)
 %d translation to the tip of the instrument
 
 % distance from the camera to the tools in cm
-depth = 64;
+depth = 50;
 
 % Load the image (comment if using a video)
 
@@ -70,10 +70,10 @@ satMask = im2bw(imageSat, levelS);
 
 
 % Combination of RGB masks
-redMask = imerode(satMask & origRedMask & ~origGreenMask & ~origBlueMask, strel('diamond',5));
-greenMask = imerode(satMask & origGreenMask & ~origRedMask & ~origBlueMask, strel('diamond',5));
-blueMask = imerode(satMask & origBlueMask & ~origRedMask, strel('diamond',5)); % blue marker usualy has green too
-yellowMask = imerode(satMask & origRedMask & origGreenMask & ~origBlueMask, strel('diamond',5));
+redMask = satMask & origRedMask & ~origGreenMask & ~origBlueMask ;
+greenMask = satMask & origGreenMask & ~origRedMask & ~origBlueMask;
+blueMask = satMask & origBlueMask & ~origRedMask; % blue marker usualy has green too
+yellowMask = satMask & origRedMask & origGreenMask & ~origBlueMask;
 
 % imshow(uint16(hsv_image(:,:,2).*hsv_image(:,:,3)),[]) % red yellow blue
 % imshow(uint16(hsv_image(:,:,1).*hsv_image(:,:,2)),[]) % blue
@@ -217,9 +217,7 @@ listMarkersBlue = zeros(numBlue,4);
 
 % initialize the max values of each channel and their index in the list
 maxBlue = 0;
-maxBlue2 = 0;
 maxIndBlue = -1;
-maxIndBlue2 = -1;
 
 for i = 1:numBlue
     % LABEL NAME
@@ -240,14 +238,11 @@ for i = 1:numBlue
     % for red
     else 
         if maxColor > maxBlue
-            maxBlue2 = maxBlue;
             maxBlue = maxColor;
-            maxIndBlue2 = maxIndBlue;
             maxIndBlue = i;
         end
     end
 end
-display('endBlue')
 % Yellow --------------------------------------------------------------------
 % label the image
 [LYellow,numYellow] = bwlabel(yellowMask);
@@ -274,7 +269,7 @@ for i = 1:numYellow
     listMarkersYellow(i,2) = centroidsYellow(i, 1);
     listMarkersYellow(i,3) = centroidsYellow(i, 2);
 
-    color = impixel (all, centroidsYellow(i,1), centroidsYellow(i,2));
+    color = impixel (image, centroidsYellow(i,1), centroidsYellow(i,2));
     [maxColor,Index] = max(color);
     
     listMarkersYellow(i,4) = 4;
@@ -289,6 +284,7 @@ for i = 1:numYellow
    
 end
 % --------------------------------------------------------
+%% OLD CODE
 % maxYellow=0;
 % maxIndYellow = -1;
 % 
@@ -394,17 +390,16 @@ end
 %     plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
 %     hold on
 % end
-% % if maxIndYellow ~= -1
-% %     plot (listMarkers(maxIndYellow,2), listMarkers(maxIndYellow,3),'y*')
-% %     hold on
-% % end
+% if maxIndYellow ~= -1
+%     plot (listMarkersYellow(maxIndYellow,2), listMarkersYellow(maxIndYellow,3),'y*')
+%     hold on
+% end
 % if maxIndGreen ~= -1
 %     plot (listMarkersGreen(maxIndGreen,2), listMarkersGreen(maxIndGreen,3),'g*')
 %     hold on
 % end
 % if maxIndBlue ~= -1
-%     plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),...
-%         listMarkersBlue(maxIndBlue2,2), listMarkersBlue(maxIndBlue2,3),'b*')
+%     plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),'b*')
 %     hold on
 % end
 
@@ -464,7 +459,7 @@ end
 
 % yellow
 if maxIndYellow~= -1 
-  markersPos(2,:) = [listMarkers(maxIndYellow,2), listMarkers(maxIndYellow,3)];
+  markersPos(2,:) = [listMarkersYellow(maxIndYellow,2), listMarkersYellow(maxIndYellow,3)];
 %marker2_area=A_listMarkers(maxIndYellow);
 end
 
