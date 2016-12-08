@@ -483,28 +483,28 @@ if maxIndBlue~= -1
 %    marker4_area=A_listMarkers(maxIndBlue);
 end
 %% Output
-RealW=400; % camera field (width in mm)
-RealH=200; % camera field (height in mm)
-[imgH imgW]=size(image); % number of pixels
-real_pxW=RealW/imgW; % 1 pixel width in mm
-real_pxH=RealH/imgH; %1 pixel height in mm
+% RealW=400; % camera field (width in mm)
+% RealH=200; % camera field (height in mm)
+% [imgH imgW]=size(image); % number of pixels
+% real_pxW=RealW/imgW; % 1 pixel width in mm
+% real_pxH=RealH/imgH; %1 pixel height in mm
 
 %dist in mm
 %red 105 yellow 25 green 130 blue 30 mm
-y1 = markersPos(1,1) * real_pxW;
-x1 = markersPos(1,2) * real_pxH;
+y1 = markersPos(1,1) ;
+x1 = markersPos(1,2) ;
 d1=105;
 
-y2 = markersPos(2,1) * real_pxW;
-x2 = markersPos(2,2) * real_pxH;
+y2 = markersPos(2,1);
+x2 = markersPos(2,2);
 d2 = 25;
 
-y3=markersPos(3,1) * real_pxW;
-x3=markersPos(3,2) * real_pxH;
+y3=markersPos(3,1);
+x3=markersPos(3,2);
 d3 = 130;
 
-y4 = markersPos(4,1) * real_pxW;
-x4 = markersPos(4,2) * real_pxH;
+y4 = markersPos(4,1);
+x4 = markersPos(4,2);
 d4 = 30;
 
 % give 0 in m1 because there is no red marker in this case
