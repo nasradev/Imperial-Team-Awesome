@@ -144,6 +144,8 @@ try
                         secondColour,'BoxOpacity',0.4,'TextColor','white');
 
             end
+
+              
             
             %insert the circles outlining the first checkerboard
             shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...

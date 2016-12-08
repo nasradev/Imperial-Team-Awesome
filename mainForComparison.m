@@ -8,14 +8,17 @@ function main()
 squareSize = 5.4;
 
 %Load up the camera parameters:
-load('naskosCameraParamsLaptop.mat') %or whatever
+load('iphoneCam.mat') %or whatever
+%M = tdfread('take1_003.csv',',');
+M = tdfread('take1_002.tsv');
 
 %Set the video file and define output video object
 obj = VideoReader('C:\Group Project\Videos\Take 2\IMG_5949-hd.MOV');
+%obj = VideoReader('C:\Group Project\Videos\Take 2\IMG_5950.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
-k = 1;
+
 
 firstBoard.colour = zeros(1,3);
 secondBoard.colour = zeros(1,3);
@@ -23,7 +26,8 @@ thirdBoard.colour = zeros(1,3);
 
 P = [];
 % Go through the video frames
-obj.CurrentTime = 6;
+obj.CurrentTime = 4;
+k = round(obj.FrameRate) * round(obj.CurrentTime) + 1;
 while hasFrame(obj);  
     data = readFrame(obj);
     
@@ -76,26 +80,54 @@ while hasFrame(obj);
       end
      end
  
-    if length(K) == 0 &&  firstBoard.colour == [0 0 0]
+    % Get the R and t of the World with respect to the black checkerboard: 
+    if (isempty(P)) &&  isequal(firstBoard.colour, [0 0 0])
            [R,t] = extrinsics(firstBoard.imagePoints, ...
                     firstBoard.worldPoints, cameraParams);
       P = cameraParams.IntrinsicMatrix * [R t'];
-    elseif length(K) == 0 &&  secondBoard.colour == [0 0 0]
+    elseif isempty(P) &&  isequal(secondBoard.colour, [0 0 0])
       [R,t] = extrinsics(secondBoard.imagePoints, ...
                     secondBoard.worldPoints, cameraParams);
       P = cameraParams.IntrinsicMatrix * [R t'];
-    elseif length(K) == 0 &&  thirdBoard.colour == [0 0 0]
+    elseif isempty(P) &&  isequal(firstBoard.colour, [0 0 0])
       [R,t] = extrinsics(thirdBoard.imagePoints, ...
                     thirdBoard.worldPoints, cameraParams);
       P = cameraParams.IntrinsicMatrix * [R t'];
     end
-    x = floor(1.4 * k)
+    x = floor(1.4 * k);
     record = [M.Tx1(x), M.Ty1(x), M.Tz1(x), M.Q01(x), M.Qx1(x), ...
                     M.Qy1(x), M.Qz1(x)];
     
-    T = getAuroraTranslation(record);
-    auroraInImage = P*T;
-    
+
+    if isempty(P) == 0
+      % Get the position of the tool sensor in Aurora frame
+      T = getAuroraTranslation(record);
+      aurorapoint = T(1:3,4);
+      Rx = [1 0 0; 0 -1 0;0 0 -1];
+      Rz = [0 1 0; -1 0 0; 0 0 1];
+      % This is the rotation matrix for Aurora to Cboard
+      Taugcb = Rx * Rz;
+      % Transform the Aurora point to Cboard frame
+      cbpoint = aurorapoint' * Taugcb';
+      % Transform to camera frame now:
+      %TODO: Pass this to Gigi
+      campoint = cbpoint * R + t;
+
+  %     Pa = [R;t];
+
+      %[focal length in mm]*[resolution]/[sensor size in mm]
+      K = cameraParams.IntrinsicMatrix;
+      % Transform into image point:
+      impoint = campoint * K;
+      % This rescales for Z
+      impoint = impoint / impoint(3);
+     shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+    'CustomBorderColor',[255 0 0]);
+     circle = int32([impoint(1) impoint(2) 10; 0 0 0]);
+     data = step(shapeInserter, data, circle); 
+      % BTW camera position C in world frame is:
+      % C = -R'*t
+    end
      % Red and Yellow in tool 1, Green and Blue in tool 2
     else
         display('no checkerboards found')
@@ -106,7 +138,7 @@ while hasFrame(obj);
 end %hasFrame
 
 %Output the results to video:
-v = VideoWriter('C:\Group Project\Videos\output10');
+v = VideoWriter('C:\Group Project\Videos\49withAurora1');
 open(v)
 writeVideo(v,mov)
 close(v)
