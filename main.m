@@ -6,7 +6,7 @@ close all
 warning off
 %%Definitions
 %Set the video file and define output video object
-obj = VideoReader('IMG_5947.MOV');
+obj = VideoReader('IMG_5949.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
@@ -14,6 +14,7 @@ mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
 
 %Framerate Iphon
 %dt = 1/30;
+
 %Framerate Webcam
 %dt = 1/25;
 
@@ -22,7 +23,7 @@ squareSize = 5.4;
 
 %Load up the camera parameters:
 load('iphoneCam.mat') %or whatever
-k = [cameraParams.IntrinsicMatrix, [zeros(2,1); 1]];
+k = [cameraParams.IntrinsicMatrix', [0; 0; 1]];
 
 %Define Data
 firstBoard.colour = zeros(1,3);
@@ -309,7 +310,7 @@ shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',..
 for j= 2:length(hatY.data(:,1))
   data1 = readFrame(obj1);
   circle = int32([hatY.data(j,1) hatY.data(j,2) 2; 0 0 0]); %2 is the size
-  refFrame = quiver3(zeros(3,1),zeros(3,1),zeros(3,1),[1;0;0],[0;1;0],[0;0;1]);
+  %refFrame = quiver3(zeros(3,1),zeros(3,1),zeros(3,1),[1;0;0],[0;1;0],[0;0;1]);
   mov1(j).cdata = step(shapeInserter, data1, circle);
   %mov1(j).cdata = step(shapeInserter, data1, refFrame);
 end 
