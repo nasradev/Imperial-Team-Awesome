@@ -26,8 +26,8 @@ thirdBoard.colour = zeros(1,3);
 
 P = [];
 % Go through the video frames
-obj.CurrentTime = 4;
-k = round(obj.FrameRate) * round(obj.CurrentTime) + 1;
+obj.CurrentTime = 8;
+k = 1;
 while hasFrame(obj);  
     data = readFrame(obj);
     
@@ -94,12 +94,12 @@ while hasFrame(obj);
                     thirdBoard.worldPoints, cameraParams);
       P = cameraParams.IntrinsicMatrix * [R t'];
     end
-    x = floor(1.4 * k);
-    record = [M.Tx1(x), M.Ty1(x), M.Tz1(x), M.Q01(x), M.Qx1(x), ...
+    x = floor(1.4 *  (round(obj.FrameRate) * round(obj.CurrentTime) + k));
+    if isempty(P) == 0 && x <= length( M.Ty1 )
+
+      record = [M.Tx1(x), M.Ty1(x), M.Tz1(x), M.Q01(x), M.Qx1(x), ...
                     M.Qy1(x), M.Qz1(x)];
     
-
-    if isempty(P) == 0
       % Get the position of the tool sensor in Aurora frame
       T = getAuroraTranslation(record);
       aurorapoint = T(1:3,4);
