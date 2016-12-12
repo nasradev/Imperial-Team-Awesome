@@ -382,27 +382,27 @@ end
 % end
 
 %% Ploting and giving output
-%figure, 
-% imshow (image);
-% hold on
+% figure, 
+imshow (image);
+hold on
 % 
 % If you want to plot only the higher marker of each color-----------------
-% if maxIndRed ~= -1
-%     plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
-%     hold on
-% end
-% if maxIndYellow ~= -1
-%     plot (listMarkersYellow(maxIndYellow,2), listMarkersYellow(maxIndYellow,3),'y*')
-%     hold on
-% end
-% if maxIndGreen ~= -1
-%     plot (listMarkersGreen(maxIndGreen,2), listMarkersGreen(maxIndGreen,3),'g*')
-%     hold on
-% end
-% if maxIndBlue ~= -1
-%     plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),'b*')
-%     hold on
-% end
+if maxIndRed ~= -1
+    plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
+    hold on
+end
+if maxIndYellow ~= -1
+    plot (listMarkersYellow(maxIndYellow,2), listMarkersYellow(maxIndYellow,3),'y*')
+    hold on
+end
+if maxIndGreen ~= -1
+    plot (listMarkersGreen(maxIndGreen,2), listMarkersGreen(maxIndGreen,3),'g*')
+    hold on
+end
+if maxIndBlue ~= -1
+    plot (listMarkersBlue(maxIndBlue,2), listMarkersBlue(maxIndBlue,3),'b*')
+    hold on
+end
 
 
 % If you want to plot all the detected markers ----------------------------
@@ -483,28 +483,23 @@ if maxIndBlue~= -1
 %    marker4_area=A_listMarkers(maxIndBlue);
 end
 %% Output
-RealW=400; % camera field (width in mm)
-RealH=200; % camera field (height in mm)
-[imgH imgW]=size(image); % number of pixels
-real_pxW=RealW/imgW; % 1 pixel width in mm
-real_pxH=RealH/imgH; %1 pixel height in mm
 
 %dist in mm
 %red 105 yellow 25 green 130 blue 30 mm
-y1 = markersPos(1,1) * real_pxW;
-x1 = markersPos(1,2) * real_pxH;
+x1 = markersPos(1,1);
+y1 = markersPos(1,2);
 d1=105;
 
-y2 = markersPos(2,1) * real_pxW;
-x2 = markersPos(2,2) * real_pxH;
+x2 = markersPos(2,1);
+y2 = markersPos(2,2);
 d2 = 25;
 
-y3=markersPos(3,1) * real_pxW;
-x3=markersPos(3,2) * real_pxH;
+x3=markersPos(3,1);
+y3=markersPos(3,2);
 d3 = 130;
 
-y4 = markersPos(4,1) * real_pxW;
-x4 = markersPos(4,2) * real_pxH;
+x4 = markersPos(4,1);
+y4 = markersPos(4,2);
 d4 = 30;
 
 % give 0 in m1 because there is no red marker in this case
