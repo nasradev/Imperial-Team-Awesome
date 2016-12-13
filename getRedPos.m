@@ -72,7 +72,7 @@ redMask = satMask & origRedMask & ~origGreenMask & ~origBlueMask ;
 % 
 % % Get rid of small objects
 % redMask     = bwareafilt(redMask, [markerArea/2 inf]);
-redMask = imerode(redMask, strel('line',11,10));
+redMask = imerode(redMask, strel('line',10,9));
 
 % Reconstruction of the segmented image -----------------------------------
 % reconstruct an image with all the markers
