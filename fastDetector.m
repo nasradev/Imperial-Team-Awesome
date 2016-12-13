@@ -1,4 +1,4 @@
-video = 'IMG_6154.MOV';
+video = '20161212_174350000_iOS.MOV';
 obj = VideoReader(video);
 vidWidth = obj.Width;
 vidHeight = obj.Height;
@@ -12,7 +12,7 @@ counter = 0;
 staticRedCounter = 0;
 staticYellowCounter = 0;
 % staticGreenCounter = 0;
-% staticBlueCounter = 0;
+staticBlueCounter = 0;
 
 % IN "while hasFrame(obj);" --------------------------------
 while hasFrame(obj);
@@ -47,18 +47,30 @@ while hasFrame(obj);
         else
                 display('No yellow marker detected');
         end
-        
-        % Blue marker
-%         [tinyBlue, rect] = imcrop(data);
-%         [blue, blueArea] = getBluePos(tinyBlue);
-%         if( blue(1) ~=  0 || blue(2) ~= 0)
-%                 blue(1) = blue(1) + rect(1);
-%                 blue(2) = blue(2) + rect(2);
+                
+%         % Green marker
+%         [tinyGreen, rect] = imcrop(data);
+%         [green, greenArea] = getGreenPos(tinyGreen);
+%         if( green(1) ~=  0 || green(2) ~= 0)
+%                 green(1) = green(1) + rect(1);
+%                 green(2) = green(2) + rect(2);
 %                 % reset the counter to 0 because a marker was detected
 %                 staticRedCounter = 0;
 %         else
 %                 display('No blue marker detected');
 %         end
+        
+        % Blue marker
+        [tinyBlue, rect] = imcrop(data);
+        [blue, blueArea] = getBluePos(tinyBlue);
+        if( blue(1) ~=  0 || blue(2) ~= 0)
+                blue(1) = blue(1) + rect(1);
+                blue(2) = blue(2) + rect(2);
+                % reset the counter to 0 because a marker was detected
+                staticRedCounter = 0;
+        else
+                display('No blue marker detected');
+        end
 
     % For the rest of the video--------------------------------------------
     else
@@ -207,52 +219,52 @@ while hasFrame(obj);
 %             end
 %         end
 %         plot(green(1), green(2), '*g');
-%         
-%         
-%         % BLUE MARKER
-%         % Square centered on the red marker with an area 20 times the marker
-%         % area
-%         width = sqrt(blueArea * 20);
-%         % if the area of the marker is too small, give a min width
-%         if width < 50
-%             width = 50;
-%         end
-%         
-%         % do a rectangle
-%         [rect, xrect, yrect] = doSquare(blue(1), blue(2), width, vidWidth, vidHeight);
-%         % crop the image around the marker
-%         tinyBlue = imcrop(data,rect);
-%         % if no mrker is detected in 3 consecutive frames use a bigger
-%         % image
-%         if staticBlueCounter == 0
-%             % get the new position of the red marker
-%             lastBlue = blue;
-%             [blue, blueArea] = getBluePos(tinyBlue);
-%             if( blue(1) ~=  0 || blue(2) ~= 0)
-%                 blue(1) = blue(1) + xrect;
-%                 blue(2) = blue(2) + yrect;
-%                 % reset the counter to 0 because a marker was detected
-%                 staticBlueCounter = 0;
-%             else
-%                 blue = lastBlue;
-%                 staticBlueCounter = staticBlueCounter + 1;
-%             end
-%         else
-%             % Use the entire image to look for the maker
-%             tinyBlue = data;
-%             % get the new position of the red marker
-%             lastBlue = blue;
-%             [blue, blueArea] = getBluePos(tinyBlue);
-%             if( blue(1) ~=  0 || blue(2) ~= 0)
-%                 % reset the counter to 0 because a marker was detected
-%                 staticBlueCounter = 0;
-%             else
-%                 blue = lastBlue;
-%                 statiBlueCounter = staticBlueCounter + 1;
-%             end
-%         end
-%         plot(blue(1), blue(2), '*b');
+%         hold on;
+        
+        % BLUE MARKER
+        % Square centered on the red marker with an area 20 times the marker
+        % area
+        width = sqrt(blueArea * 20);
+        % if the area of the marker is too small, give a min width
+        if width < 50
+            width = 50;
+        end
+        
+        % do a rectangle
+        [rect, xrect, yrect] = doSquare(blue(1), blue(2), width, vidWidth, vidHeight);
+        % crop the image around the marker
+        tinyBlue = imcrop(data,rect);
+        % if no mrker is detected in 3 consecutive frames use a bigger
+        % image
+        if staticBlueCounter == 0
+            % get the new position of the red marker
+            lastBlue = blue;
+            [blue, blueArea] = getBluePos(tinyBlue);
+            if( blue(1) ~=  0 || blue(2) ~= 0)
+                blue(1) = blue(1) + xrect;
+                blue(2) = blue(2) + yrect;
+                % reset the counter to 0 because a marker was detected
+                staticBlueCounter = 0;
+            else
+                blue = lastBlue;
+                staticBlueCounter = staticBlueCounter + 1;
+            end
+        else
+            % Use the entire image to look for the maker
+            tinyBlue = data;
+            % get the new position of the red marker
+            lastBlue = blue;
+            [blue, blueArea] = getBluePos(tinyBlue);
+            if( blue(1) ~=  0 || blue(2) ~= 0)
+                % reset the counter to 0 because a marker was detected
+                staticBlueCounter = 0;
+            else
+                blue = lastBlue;
+                statiBlueCounter = staticBlueCounter + 1;
+            end
+        end
+        plot(blue(1), blue(2), '*b');
         hold off;
-        pause(0.4);
+        pause(0.1);
     end
 end
