@@ -144,6 +144,9 @@ P2 = [t', p2(:,4:5), zeros(length(t),1)];
 
 Y = [t', p0(:,1:2), p1(:,1:2), p2(:,1:2)];%measure (camera frame)
 X = [t' x];
+    
+Y = minimum_jerk(Y);
+X = minimum_jerk(X);
 
 M0 = [t', m0(:,3:5)];%tool reference (local)
 M1 = [t', m1(:,3:5)];
