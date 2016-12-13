@@ -1,7 +1,16 @@
-function [markersPos] = getMarkersPos(image)
+close all;
+clear;
+video = VideoReader('new_markers.mp4');
+ video.CurrentTime = 1.00;
+%while hasFrame(video)
+    % Get a single framec
+    image = readFrame(video);
+
+%function [markersPos] = getMarkersPos(image)
 % input: image you want to process
 % output: a matrix called markersPos with the position of the markers, one
-% for each color
+% for each color.
+% we get two red markers, two blue and one green
 
 close all;
 
@@ -25,7 +34,7 @@ imageGreen  = image(:,:,2);
 imageBlue   = image(:,:,3);
 
 % Take off pixels with high values in the three RGB channels
-backgrThres = 160;
+backgrThres = 110; %depending on the light (image calibration)
 for i = 1:length(image(:,1,1))
     for j = 1:length(image(1,:,1))
         if (imageRed(i,j) > backgrThres ...
@@ -37,6 +46,11 @@ for i = 1:length(image(:,1,1))
         end
     end
 end
+
+% enhancement of contrast: equalization histogram
+%imageRed    = histeq(imageRed);
+% imageGreen  = histeq(imageGreen);
+% imageBlue   = histeq(imageBlue);
 
 % Generation of the mask --------------------------------------------------
 
@@ -61,6 +75,11 @@ redMask = redMask & ~greenMask & ~blueMask;
 greenMask = greenMask & ~redMask & ~blueMask;
 blueMask = blueMask & ~redMask; % blue marker usualy has green too
 
+imshow(uint16(hsv_image(:,:,2).*hsv_image(:,:,3)),[]) % red yellow blue
+imshow(uint16(hsv_image(:,:,1).*hsv_image(:,:,2)),[]) % blue
+
+
+
 % Elimitation of small objects --------------------------------------------
 
 % aprox length of the long side
@@ -81,7 +100,7 @@ satMask     = bwareafilt(satMask, [markerArea/2 inf]);
 finalMask = satMask & (redMask | greenMask | blueMask);
 
 % erode the mask
-finalMask = imerode(finalMask, strel('diamond',1));
+finalMask = imerode(finalMask, strel('diamond',5));
 
 % reconstruct an image with all the markers
 all(:,:,1) = uint8(finalMask) .* imageRed;
@@ -96,7 +115,7 @@ all(:,:,3) = uint8(finalMask) .* imageBlue;
 % get the centroids
 s = regionprops(L,'centroid', 'BoundingBox', 'area');
 centroids = cat(1, s.Centroid);
-
+areas = cat(1, s.Area);
 % go through all the centroids and check to what color they correspond
 % create a matrix with
 %   - as many rows as labels there are
@@ -105,18 +124,30 @@ centroids = cat(1, s.Centroid);
 listMarkers = zeros(num,4);
 % initialize the max values of each channel and their index in the list
 maxRed = 0;
+maxRed2 = 0;
 maxIndRed = -1;
+maxIndRed2 = -1;
+
+maxYellow=0;
+maxIndYellow = -1;
+
 maxGreen = 0;
 maxIndGreen = -1;
+
 maxBlue = 0;
+maxBlue2 = 0;
 maxIndBlue = -1;
+maxIndBlue2 = -1;
+
 
 for i = 1:num
     % LABEL NAME
     listMarkers (i,1) = i;
+    A_listMarkers(i,1)=i;
     % CENTROID POSITION
     listMarkers (i,2) = centroids(i, 1);
     listMarkers (i,3) = centroids(i, 2);
+    A_listMarkers (i) = areas(i);
     % COLOR
     % if not all 3 channels are 0
     % See the colors of the centroid
@@ -132,17 +163,44 @@ for i = 1:num
         listMarkers(i,4) = 0;
     end
     
+    % colors ordered in ascending order
+    sortedColor = sort(color);
+    
+    % if the two bigger colors are almost the same and red is low
+    % then its a glove so I put it at 0
+    % GLOVE
+    if (abs(sortedColor(2)-sortedColor(3)) < 10 && sortedColor(1) == color(1))
+        listMarkers(i,4) = 0;
+    end
+    
+    % Take off red stuff that is not the red marker
+    % the red marker has very low green and blue values
+    % RED BUT NOT A MARKER
+    if (Index == 1 && ~(sortedColor(1)< 30 && sortedColor(2) < 30))
+           % if it's detected as red marker but blue and green are very low
+        listMarkers(i,4) = 0;
+    end
+    
     % find the higher values
     % for red
-    if Index == 1
+    if listMarkers(i,4) == 1
         if maxColor > maxRed
+            maxRed2 = maxRed;
             maxRed = maxColor;
+            maxIndRed2 = maxIndRed;
             maxIndRed = i;
+        end
+    end
+    % for yellow
+    if listMarkers(i,4) == 4
+        if maxColor > maxYellow
+            maxYellow = maxColor;
+            maxIndYellow = i;
         end
     end
     
     % for green
-    if Index == 2
+    if listMarkers(i,4) == 2
         if maxColor > maxGreen
             maxGreen = maxColor;
             maxIndGreen = i;
@@ -150,74 +208,111 @@ for i = 1:num
     end
     
     % for blue
-    if Index == 3
+    if listMarkers(i,4) == 3
         if maxColor > maxBlue
+            maxBlue2 = maxBlue;
             maxBlue = maxColor;
+            maxIndBlue2 = maxIndBlue;
             maxIndBlue = i;
         end
     end
 end
 
 %% Ploting and giving output
-% figure, imshow (image);
-% hold on
-% 
-% % If you want to plot only the higher marker of each color-----------------
-% if maxIndRed ~= -1
-%     plot (listMarkers(maxIndRed,2), listMarkers(maxIndRed,3),'r*')
-%     hold on
-% end
-% if maxIndGreen ~= -1
-%     plot (listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3),'g*')
-%     hold on
-% end
-% if maxIndBlue ~= -1
-%     plot (listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3),'b*')
-% end
-% hold off
+figure, imshow (image);
+hold on
+
+% If you want to plot only the higher marker of each color-----------------
+if maxIndRed ~= -1
+    plot (listMarkers(maxIndRed,2), listMarkers(maxIndRed,3),'r*')
+    hold on
+end
+if maxIndYellow ~= -1
+    plot (listMarkers(maxIndYellow,2), listMarkers(maxIndYellow,3),'r*')
+    hold on
+end
+if maxIndGreen ~= -1
+    plot (listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3),'g*')
+    hold on
+end
+if maxIndBlue ~= -1
+    plot (listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3),'b*')
+    hold on
+end
+
 
 % If you want to plot all the detected markers ----------------------------
 % for i = 1:num
 %     % establish criteria:
 %     % - if the centroid is inside the marker
-%     if (listIndex(i,4)~= 0 )
+%     if (listMarkers(i,4)~= 0 )
 %         % plot red
-%         if (listIndex(i,4) == 1)
-%             plot (listIndex(i,2), listIndex(i,3),'r*')
+%         if (listMarkers(i,4) == 1)
+%             plot (listMarkers(i,2), listMarkers(i,3),'r*')
 %             hold on
 %         end
 %         % plot green
-%         if (listIndex(i,4) == 2)
-%             plot (listIndex(i,2), listIndex(i,3),'g*')
+%         if (listMarkers(i,4) == 2)
+%             plot (listMarkers(i,2), listMarkers(i,3),'g*')
 %             hold on
 %         end
 %         % plot blue
-%         if (listIndex(i,4) == 3)
-%             plot (listIndex(i,2), listIndex(i,3),'b*')
+%         if (listMarkers(i,4) == 3)
+%             plot (listMarkers(i,2), listMarkers(i,3),'b*')
 %             hold on
 %         end
 %     end
+% end
+
+%% Measure the distance between the little blue marker and the little red marker and the top marker
+if maxIndBlue2~= -1 
+    if maxIndRed2~= -1 
+        little_markers_dist=dist_points([listMarkers(maxIndBlue2,2), listMarkers(maxIndBlue2,3)],[listMarkers(maxIndRed2,2), listMarkers(maxIndRed2,3)])
+    end
+    if maxIndRed ~= -1
+        top_marker=dist_points([listMarkers(maxIndBlue2,2), listMarkers(maxIndBlue2,3)],[listMarkers(maxIndRed,2), listMarkers(maxIndRed,3)])
+    end
+end
+
+%% Check if the 3 centroids lie on a straight line (rougly)
+% if maxIndRed~= -1 && maxIndRed2~= -1 | maxIndRed~= -1 && maxIndBlue2~= -1 | maxIndRed2~= -1 && maxIndBlue2~= -1
+% xData=[listMarkers(maxIndBlue2,2), listMarkers(maxIndRed2,2), listMarkers(maxIndRed,2)];
+% yData=[listMarkers(maxIndBlue2,2), listMarkers(maxIndRed2,3), listMarkers(maxIndRed,3)];
+% hold on, line(xData,yData, 'LineStyle','-');
+% hold off
 % end
 
 % Output: markersPosition -------------------------------------------------
 % markersPos has te position in 2D (x,y) of the red, green and blue markers
 % respectively
 
-markersPos = zeros(3,2);
+markersPos = zeros(4,2);
 
-% red marker
+% red marker_1
 if maxIndRed~= -1
     markersPos(1,:) = [listMarkers(maxIndRed,2), listMarkers(maxIndRed,3)];
+    marker1_area=A_listMarkers(maxIndRed);
+end
+
+% yellow
+if maxIndBlue2~= -1 && maxIndRed2~= -1
+markersPos(2,:) = [listMarkers(maxIndYellow,2), listMarkers(maxIndYellow,3)];
+marker2_area=A_listMarkers(maxIndYellow);
 end
 
 % green marker
 if maxIndGreen~= -1
-    markersPos(2,:) = [listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3)];
+    markersPos(3,:) = [listMarkers(maxIndGreen,2), listMarkers(maxIndGreen,3)];
+    marker3_area=A_listMarkers(maxIndGreen);
 end
 
 % blue marker
 if maxIndBlue~= -1
-    markersPos(3,:) = [listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3)];
+    markersPos(4,:) = [listMarkers(maxIndBlue,2), listMarkers(maxIndBlue,3)];
+    marker4_area=A_listMarkers(maxIndBlue);
 end
+%% No one cares about marker 3
+% so check if marker1, 2r, 2b and 4 are detected
 
-end
+%end
+%end

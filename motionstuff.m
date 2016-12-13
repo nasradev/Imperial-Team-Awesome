@@ -1,6 +1,6 @@
 clear all;
 close all;
-filename='video_webcam1.mp4';
+filename='new_markers.mp4';
 
 %% Compute Optical Flow Using Lucas-Kanade derivative of Gaussian
  vidReader = VideoReader(filename);
@@ -94,7 +94,7 @@ for f =1:40% number_of_frames
 	juana(:,:,2) = image(:,:,2) .* uint8(juanaMask);
     juana(:,:,3) = image(:,:,3) .* uint8(juanaMask);
 
-    markersPos = getMarkersPos(juana);
+%     markersPos = getMarkersPos(juana);
         
          figure, 
          subplot(1,2,1), imshow(juana),
