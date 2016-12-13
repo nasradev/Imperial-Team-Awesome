@@ -6,7 +6,7 @@ close all
 warning off
 %%Definitions
 %Set the video file and define output video object
-obj = VideoReader('IMG_5949.MOV');
+obj = VideoReader('IMG_5949-hd.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
@@ -22,14 +22,15 @@ mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
 squareSize = 5.4;
 
 %Load up the camera parameters:
-load('iphoneCam.mat') %or whatever
-k = [cameraParams.IntrinsicMatrix', [0; 0; 1]];
+load('iphoneCam1080.mat') %or whatever
+k = [cameraParams1080.IntrinsicMatrix', [0; 0; 1]];
 
 %Define Data
 firstBoard.colour = zeros(1,3);
 secondBoard.colour = zeros(1,3);
 thirdBoard.colour = zeros(1,3);
 
+obj.CurrentTime = 1;
 counter = 0;
 % Go through the video frames
 while hasFrame(obj);  
@@ -44,12 +45,12 @@ while hasFrame(obj);
     [red, yellow, green, blue] = getMarkerPos(data);
     m0(counter,:) = red;
     m1(counter,:) = yellow;
-    if mean(red(1:2)) == 0 && counter > 1
-        m0(counter,:) = m0(counter-1,:);
-    end
-    if mean(yellow(1:2)) == 0 && counter > 1
-        m1(counter,:) = m1(counter-1,:);
-    end
+%     if mean(red(1:2)) == 0 && counter > 1
+%         m0(counter,:) = m0(counter-1,:);
+%     end
+%     if mean(yellow(1:2)) == 0 && counter > 1
+%         m1(counter,:) = m1(counter-1,:);
+%     end
     %toc
     
     if firstBoard.imagePoints(1,1) > -1
@@ -101,14 +102,23 @@ while hasFrame(obj);
         p0(counter,:) = firstBoard.threePoints(1,:);
         p1(counter,:) = firstBoard.threePoints(2,:);
         p2(counter,:) = firstBoard.threePoints(3,:);
+        [rot, trans] = extrinsics(firstBoard.imagePoints,...
+            firstBoard.worldPoints, cameraParams1080);
+        x(counter,:) = [rotm2eul(rot,'ZYX') trans];
     elseif secondBoard.colour(3) == 255
         p0(counter,:) = firstBoard.threePoints(1,:);
         p1(counter,:) = firstBoard.threePoints(2,:);
         p2(counter,:) = firstBoard.threePoints(3,:);
+        [rot, trans] = extrinsics(secondBoard.imagePoints,...
+            secondBoard.worldPoints, cameraParams1080);
+        x(counter,:) = [rotm2eul(rot,'ZYX') trans];
     elseif thirdBoard.colour(3) == 255
         p0(counter,:) = firstBoard.threePoints(1,:);
         p1(counter,:) = firstBoard.threePoints(2,:);
         p2(counter,:) = firstBoard.threePoints(3,:);
+        [rot, trans] = extrinsics(thirdBoard.imagePoints,...
+            thirdBoard.worldPoints, cameraParams1080);
+        x(counter,:) = [rotm2eul(rot,'ZYX') trans];
     end
 end %hasFrame
 
@@ -128,12 +138,12 @@ dt = 1/obj.FrameRate;%0.01;
 T = dt*counter;
 t = dt : dt : T;
 
-P0 = [t', p0(:,3:5)];%checkerboard reference (local)
-P1 = [t', p1(:,3:5)];
-P2 = [t', p2(:,3:5)];
+P0 = [t', p0(:,4:5), zeros(length(t),1)];%checkerboard reference (local)
+P1 = [t', p1(:,4:5), zeros(length(t),1)];
+P2 = [t', p2(:,4:5), zeros(length(t),1)];
 
-Y = [t', p0(:,1:2), p1(:,1:2),p2(:,1:2)];%measure (camera frame)
-
+Y = [t', p0(:,1:2), p1(:,1:2), p2(:,1:2)];%measure (camera frame)
+X = [t' x];
 
 M0 = [t', m0(:,3:5)];%tool reference (local)
 M1 = [t', m1(:,3:5)];
@@ -156,6 +166,7 @@ Gol1 = 1/s^4*eye(6);
 Gol2 = 1/s^2*eye(4);
 
 [F, B, C, D] = ssdata(Gol1);
+z0c = [p0(1,1:2), p1(1,1:2), p2(1,1:2), zeros(1,18)];%zeros(1,24);%[[0, 0, 2000, 380, 2000, 380], zeros(1,18)];
 
 
 %% Marker 1 State Evolution
@@ -166,7 +177,7 @@ Gol2 = 1/s^2*eye(4);
 % 
 % C1 = [eye(4), zeros(4,4)];
 [F1, B1, C1, D1] = ssdata(Gol2);
-
+z0m = [m0(1:1:2), m0(2,1:2), zeros(1,4)];
 
 %% Gain
 load('K')
@@ -178,25 +189,49 @@ load('K')
 %% Simulation
 sim('trackingSim')
 
+%% Projection to Camera Frame
+
+% P01 = P0(:,2:4)';
+% P11 = P1(:,2:4)';
+% P21 = P2(:,2:4)';
+% 
+% for i = 1:length(t)
+%     Rx = [1, 0, 0;
+%         0, cos(hatX.data(i,1)), -sin(hatX.data(i,1));
+%     0, sin(hatX.data(i,1)), cos(hatX.data(i,1))];
+%     Ry = [cos(hatX.data(i,2)), 0, sin(hatX.data(i,2));
+%         0, 1, 0;
+%         -sin(hatX.data(i,2)), 0, cos(hatX.data(i,2))];
+%     Rz = [cos(hatX.data(i,1)), -sin(hatX.data(i,1)), 0;
+%     sin(hatX.data(i,1)), cos(hatX.data(i,1)), 0;
+%     0, 0, 1];
+%     R = Rx*Ry*Rz;
+%     tran = [hatX.data(i,7); hatX.data(i,9); hatX.data(i,11)];
+%     y0(:,i) = k(1:3,1:3)*(R*P01(:,i) + tran);
+%     y1(:,i) = k(1:3,1:3)*(R*P11(:,i) + tran);
+%     y2(:,i) = k(1:3,1:3)*(R*P21(:,i) + tran);
+% end
+% 
+
 %% Data Analysis
 figure(1) %Measure Plot
 subplot(3,2,1)
-plot(t, Y(:,2), t, hatY.data(2:end,1), '--')
+plot(t, Y(:,2), t, hatY.data(2:end,1), '--')%, t, y0(1,:),'.')
 %ylim([0,1e3])
 subplot(3,2,2)
-plot(t, Y(:,3), t, hatY.data(2:end,2), '--')
+plot(t, Y(:,3), t, hatY.data(2:end,2), '--')%, t, y0(2,:),'.')
 %ylim([0,1e3])
 subplot(3,2,3)
-plot(t, Y(:,4), t, hatY.data(2:end,3), '--')
+plot(t, Y(:,4), t, hatY.data(2:end,3), '--')%, t, y1(1,:),'.')
 %ylim([0,1e3])
 subplot(3,2,4)
-plot(t, Y(:,5), t, hatY.data(2:end,4), '--')
+plot(t, Y(:,5), t, hatY.data(2:end,4), '--')%, t, y1(2,:),'.')
 %ylim([0,1e3])
 subplot(3,2,5)
-plot(t, Y(:,6), t, hatY.data(2:end,5), '--')
+plot(t, Y(:,6), t, hatY.data(2:end,5), '--')%, t, y2(1,:),'.')
 %ylim([0,1e3])
 subplot(3,2,6)
-plot(t, Y(:,7), t, hatY.data(2:end,6), '--')
+plot(t, Y(:,7), t, hatY.data(2:end,6), '--')%, t, y2(2,:),'.')
 %ylim([0,1e3])
 
 
@@ -222,34 +257,65 @@ subplot(3,2,6)
 plot(t, yAbsErr(:,6))
 %ylim([0,1e3])
 
+% figure(3) %State Plot
+% subplot(3,2,1)
+% plot(t, hatX.data(2:end,1), t, x(:,1), '--')
+% xlabel('time [s]')
+% ylabel('\theta [degree]')
+% grid on
+% subplot(3,2,2)
+% plot(t, hatX.data(2:end,2), t, x(:,2), '--')
+% xlabel('time [s]')
+% ylabel('\phi [degree]')
+% grid on
+% subplot(3,2,3)
+% plot(t, hatX.data(2:end,3), t, x(:,3), '--')
+% xlabel('time [s]')
+% ylabel('\psi [degree]')
+% grid on
+% subplot(3,2,4)
+% plot(t, hatX.data(2:end,7), t, x(:,4), '--')
+% xlabel('time [s]')
+% ylabel('x [mm]')
+% grid on
+% subplot(3,2,5)
+% plot(t, hatX.data(2:end,9), t, x(:,5), '--')
+% xlabel('time [s]')
+% ylabel('y [mm]')
+% grid on
+% subplot(3,2,6)
+% plot(t, hatX.data(2:end,11), t, x(:,6), '--')
+% xlabel('time [s]')
+% ylabel('z [mm]')
+% grid on
 figure(3) %State Plot
 subplot(3,2,1)
-plot(t, hatX.data(2:end,1))
+plot(t, x(:,1))
 xlabel('time [s]')
 ylabel('\theta [degree]')
 grid on
 subplot(3,2,2)
-plot(t, hatX.data(2:end,2))
+plot(t, x(:,2))
 xlabel('time [s]')
 ylabel('\phi [degree]')
 grid on
 subplot(3,2,3)
-plot(t, hatX.data(2:end,3))
+plot(t, x(:,3))
 xlabel('time [s]')
 ylabel('\psi [degree]')
 grid on
 subplot(3,2,4)
-plot(t, hatX.data(2:end,7))
+plot(t, x(:,4))
 xlabel('time [s]')
 ylabel('x [mm]')
 grid on
 subplot(3,2,5)
-plot(t, hatX.data(2:end,9))
+plot(t, x(:,5))
 xlabel('time [s]')
 ylabel('y [mm]')
 grid on
 subplot(3,2,6)
-plot(t, hatX.data(2:end,11))
+plot(t, x(:,6))
 xlabel('time [s]')
 ylabel('z [mm]')
 grid on

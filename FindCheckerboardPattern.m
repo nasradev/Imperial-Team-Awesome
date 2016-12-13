@@ -32,7 +32,7 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
         rgb(1) = max(min(data(yrange,xrange,1)));
         rgb(2) = max(min(data(yrange,xrange,2)));
         rgb(3) = max(min(data(yrange,xrange,3)));
-        rgb
+        %rgb
         
         if (rgb(3) > (rgb(2) + 10)) && (rgb(3) > (rgb(1) + 10))
            colour = blue;
@@ -43,11 +43,16 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
         end
         
         xBasePoint = floor(boardSize(1) / 2);
-        yPoint = floor(boardSize(2) / 2) * (boardSize(1) - 1) + xBasePoint;
+%         yPoint = floor(boardSize(2) / 2) * (boardSize(1) - 1) + xBasePoint;
+        yPoint = floor(boardSize(2)-2) * (boardSize(1) - 1) + xBasePoint;
+%         threePoints = ...
+%            [imagePoints(xBasePoint, 1) imagePoints(xBasePoint, 2) 0 worldPoints(xBasePoint,1) worldPoints(xBasePoint,2)
+%             imagePoints(xBasePoint+1, 1) imagePoints(xBasePoint+1, 2) 0 worldPoints(xBasePoint+1,1) worldPoints(xBasePoint+1,2)
+%             imagePoints(yPoint,1) imagePoints(yPoint,2) 0 worldPoints(yPoint,1) worldPoints(yPoint,2)];
         threePoints = ...
-           [imagePoints(xBasePoint, 1) imagePoints(xBasePoint, 2) 0 worldPoints(xBasePoint,1) worldPoints(xBasePoint,2)
-            imagePoints(xBasePoint+1, 1) imagePoints(xBasePoint+1, 2) 0 worldPoints(xBasePoint+1,1) worldPoints(xBasePoint+1,2)
-            imagePoints(yPoint,1) imagePoints(yPoint,2) 0 worldPoints(yPoint,1) worldPoints(yPoint,2)];
+               [imagePoints(1, 1) imagePoints(1, 2) 0 worldPoints(1,1) worldPoints(1,2)
+                imagePoints(boardSize(1)-1, 1) imagePoints(boardSize(1)-1, 2) 0 worldPoints(boardSize(1)-1,1) worldPoints(boardSize(1)-1,2)
+                imagePoints(yPoint,1) imagePoints(yPoint,2) 0 worldPoints(yPoint,1) worldPoints(yPoint,2)];
     else
         imagePoints = [-1 -1]; 
         worldPoints = [-1 -1];
