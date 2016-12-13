@@ -11,7 +11,8 @@ vidHeight = obj.Height;
 counter = 0;
 staticRedCounter = 0;
 staticYellowCounter = 0;
-staticBlueCounter = 0;
+% staticGreenCounter = 0;
+% staticBlueCounter = 0;
 
 % IN "while hasFrame(obj);" --------------------------------
 while hasFrame(obj);
@@ -76,26 +77,13 @@ while hasFrame(obj);
             width = 50;
         end
         
-        % Compute the rectangle
-        xrect = red(1) - width/2;
-        yrect = red(2) - width/2;
-        
-        rect = [xrect yrect width width];
-        if (xrect < 0)
-            rect = [0 yrect width width];
-        elseif xrect+width > vidWidth
-            rect = [0 yrect vidWidth-red(1) width];
-        end
-        if (yrect < 0)
-            rect = [xrect 0 width width];
-        elseif yrect+width > vidHeight
-            rect = [xrect yrect width vidHeight-red(2)];
-        end
+        % do the rectangle
+        [rect, xrect, yrect] = doSquare(red(1), red(2), width, vidWidth, vidHeight);
         
         % crop the image around the marker
         tinyRed = imcrop(data,rect);
-        % if no mrker is detected in 3 consecutive frames use a bigger
-        % image
+        
+        % if a marker was detected in the last frame
         if staticRedCounter == 0
             % get the new position of the red marker
             lastRed = red;
@@ -109,6 +97,8 @@ while hasFrame(obj);
                 red = lastRed;
                 staticRedCounter = staticRedCounter + 1;
             end
+            % if no marker is detected in 3 consecutive frames use a bigger
+            % image
         else
             % Use the entire image to look for the maker
             tinyRed = data;
@@ -136,24 +126,13 @@ while hasFrame(obj);
             width = 50;
         end
         
-        xrect = yellow(1) - width/2;
-        yrect = yellow(2) - width/2;
+        % do a rectangle
+        [rect, xrect, yrect] = doSquare(yellow(1), yellow(2), width, vidWidth, vidHeight);
         
-        rect = [xrect yrect width width];
-        if (xrect < 0)
-            rect = [0 yrect width width];
-        elseif xrect+width > vidWidth
-            rect = [0 yrect vidWidth-yellow(1) width];
-        end
-        if (yrect < 0)
-            rect = [xrect 0 width width];
-        elseif yrect+width > vidHeight
-            rect = [xrect yrect width vidHeight-yellow(2)];
-        end
         % crop the image around the marker
         tinyYellow = imcrop(data,rect);
-        % if no mrker is detected in 3 consecutive frames use a bigger
-        % image
+        
+        % if a marker was detected in the last frame
         if staticYellowCounter == 0
             % get the new position of the red marker
             lastYellow = yellow;
@@ -167,6 +146,8 @@ while hasFrame(obj);
                 yellow = lastYellow;
                 staticYellowCounter = staticYellowCounter + 1;
             end
+            % if no marker is detected in 3 consecutive frames use a bigger
+            % image
         else
             % Use the entire image to look for the maker
             tinyYellow = data;
@@ -181,37 +162,55 @@ while hasFrame(obj);
                 staticYellowCounter = staticYellowCounter + 1;
             end
         end
-        
+
         plot(yellow(1), yellow(2), '*y');
         hold on;
         
-        %     % GREEN MARKER
-        %     % Square centered on the red marker with an area 5 times the marker
-        %     % area
-        %     width = sqrt(greenArea * 10);
-        %     xrect = green(1) - width/2;
-        %     yrect = green(2) - width/2;
-        %
-        %     rect = [xrect yrect width width];
-        %     if (xrect < 0)
-        %         rect = [0 yrect width width];
-        %     elseif xrect+width > vidWidth
-        %         rect = [0 yrect vidWidth-green(1) width];
-        %     end
-        %     if (yrect < 0)
-        %         rect = [xrect 0 width width];
-        %     elseif yrect+width > vidHeight
-        %         rect = [xrect yrect width vidHeight-green(2)];
-        %     end
-        %     % crop the image around the marker
-        %     tinyGreen = imcrop(data,rect);
-        %     [green, greenArea] = getGreenPos(tinyGreen);
-        %     green(1) = green(1) + xrect;
-        %     green(2) = green(2) + yrect;
-        %
-%         % BLUE MARKER
-%        
+%         % GREEN MARKER
 %         % Square centered on the red marker with an area 5 times the marker
+%         % area
+%         width = sqrt(greenArea * 20);
+%         if width < 50
+%             width = 50;
+%         end
+%         % do a rectangle
+%         [rect, xrect, yrect] = doSquare(green(1), green(2), width, vidWidth, vidHeight);
+%         % crop the image around the marker
+%         tinyGreen = imcrop(data,rect);
+%         % if no mrker is detected in 3 consecutive frames use a bigger
+%         % image
+%         if staticGreenCounter == 0
+%             % get the new position of the red marker
+%             lastGreen = green;
+%             [green, greenArea] = getGreenPos(tinyGreen);
+%             if( green(1) ~=  0 || green(2) ~= 0)
+%                 green(1) = green(1) + xrect;
+%                 green(2) = green(2) + yrect;
+%                 % reset the counter to 0 because a marker was detected
+%                 staticGreenCounter = 0;
+%             else
+%                 green = lastGreen;
+%                 staticGreenCounter = staticGreenCounter + 1;
+%             end
+%         else
+%             % Use the entire image to look for the maker
+%             tinyGreen = data;
+%             % get the new position of the red marker
+%             lastGreen = green;
+%             [green, greenArea] = getGreenPos(tinyGreen);
+%             if( green(1) ~=  0 || green(2) ~= 0)
+%                 % reset the counter to 0 because a marker was detected
+%                 staticGreenCounter = 0;
+%             else
+%                 green = lastGreen;
+%                 statiGreenCounter = staticGreenCounter + 1;
+%             end
+%         end
+%         plot(green(1), green(2), '*g');
+%         
+%         
+%         % BLUE MARKER
+%         % Square centered on the red marker with an area 20 times the marker
 %         % area
 %         width = sqrt(blueArea * 20);
 %         % if the area of the marker is too small, give a min width
@@ -219,20 +218,8 @@ while hasFrame(obj);
 %             width = 50;
 %         end
 %         
-%         xrect = blue(1) - width/2;
-%         yrect = blue(2) - width/2;
-%         
-%         rect = [xrect yrect width width];
-%         if (xrect < 0)
-%             rect = [0 yrect width width];
-%         elseif xrect+width > vidWidth
-%             rect = [0 yrect vidWidth-yellow(1) width];
-%         end
-%         if (yrect < 0)
-%             rect = [xrect 0 width width];
-%         elseif yrect+width > vidHeight
-%             rect = [xrect yrect width vidHeight-yellow(2)];
-%         end
+%         % do a rectangle
+%         [rect, xrect, yrect] = doSquare(blue(1), blue(2), width, vidWidth, vidHeight);
 %         % crop the image around the marker
 %         tinyBlue = imcrop(data,rect);
 %         % if no mrker is detected in 3 consecutive frames use a bigger
@@ -266,6 +253,6 @@ while hasFrame(obj);
 %         end
 %         plot(blue(1), blue(2), '*b');
         hold off;
-        
+        pause(0.4);
     end
 end
