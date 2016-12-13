@@ -64,14 +64,15 @@ redMask = satMask & origRedMask & ~origGreenMask & ~origBlueMask ;
 
 % Elimitation of small objects --------------------------------------------
 
-% aprox length of the long side
-imageSizeCM = depth * 1.05;
-markerSize = length(image(:,1))/imageSizeCM;
-% area = long side * short side (1/4 of the long one)
-markerArea = markerSize * markerSize /4;
-
-% Get rid of small objects
-redMask     = bwareafilt(redMask, [markerArea/2 inf]);
+% % aprox length of the long side
+% imageSizeCM = depth * 1.05;
+% markerSize = length(image(:,1))/imageSizeCM;
+% % area = long side * short side (1/4 of the long one)
+% markerArea = markerSize * markerSize /4;
+% 
+% % Get rid of small objects
+% redMask     = bwareafilt(redMask, [markerArea/2 inf]);
+redMask = imerode(redMask, strel('line',10,9));
 
 % Reconstruction of the segmented image -----------------------------------
 % reconstruct an image with all the markers
@@ -111,7 +112,7 @@ for i = 1:numRed
     [maxColor,Index] = max(color);
     
     listMarkersRed(i,4) = Index;
-    if (maxColor == 0)
+    if (maxColor == 0 || areas(i) < 50)
         listMarkersRed(i,4) = 0;
         
         % find the higher values

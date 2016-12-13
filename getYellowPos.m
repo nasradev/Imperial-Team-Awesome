@@ -53,6 +53,7 @@ satMask = im2bw(imageSat, levelS);
 
 % Combination of RGB masks
 yellowMask = satMask & origRedMask & origGreenMask & ~origBlueMask;
+yellowMask = imerode(yellowMask, strel('line',10,9));
 
 % Elimitation of small objects --------------------------------------------
 
