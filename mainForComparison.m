@@ -13,10 +13,10 @@ squareSize = 5.4;
 load('iphoneCam.mat');
 
 %M = tdfread('take1_003.csv',',');
-M = tdfread('C:\Group Project\Videos\Take 3\take1_006.csv', ',');
+M = tdfread('C:\Group Project\Videos\Take 3\take1_005.csv', ',');
 
 %Set the video file and define output video object
-obj = VideoReader('C:\Group Project\Videos\Take 3\IMG_6160.MOV');
+obj = VideoReader('C:\Group Project\Videos\Take 3\IMG_6159.MOV');
 %obj = VideoReader('C:\Group Project\Videos\Take 2\IMG_5950.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
@@ -47,6 +47,9 @@ staticYellowCounter = 0;
 auroraStartOffset = 0;
 
 imagePointsPadding = 40;
+
+campoint11 = []
+campoint12 = []
 while hasFrame(obj);  
     data = readFrame(obj);
     
@@ -238,6 +241,7 @@ while hasFrame(obj);
       tic
       % Get the position of the tool sensor in Aurora frame
       [campoint, camrotation] = getAuroraTranslation(record, R, t);
+      campoint11 = [campoint11; campoint];
       %[focal length in mm]*[resolution]/[sensor size in mm]
       K = cameraParams.IntrinsicMatrix;
       % Transform into image point:
@@ -261,6 +265,7 @@ while hasFrame(obj);
       tic
       % Get the position of the tool sensor in Aurora frame
       [campoint, camrotation] = getAuroraTranslation(record, R, t);
+      campoint12 = [campoint12; campoint];
       %[focal length in mm]*[resolution]/[sensor size in mm]
       K = cameraParams.IntrinsicMatrix;
       % Transform into image point:
@@ -268,7 +273,7 @@ while hasFrame(obj);
       % This rescales for Z
       impoint = impoint / impoint(3);
      shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-    'CustomBorderColor',[255 0 0]);
+    'CustomBorderColor',[0 255 0]);
      circle = int32([impoint(2) impoint(1) 10; 0 0 0]);
      data = step(shapeInserter, data, circle); 
       % BTW camera position C in world frame is:
@@ -431,7 +436,7 @@ imshow(data);
 end %hasFrame
 
 %Output the results to video:
-v = VideoWriter('C:\Group Project\Videos\54withAurora');
+v = VideoWriter('C:\Group Project\Videos\59withAurora');
 open(v)
 writeVideo(v,mov)
 close(v)
