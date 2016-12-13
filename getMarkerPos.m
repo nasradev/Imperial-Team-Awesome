@@ -490,26 +490,26 @@ end
 % real_pxH=RealH/imgH; %1 pixel height in mm
 
 %dist in mm
-%red 105 yellow 25 green 130 blue 30 mm
-y1 = markersPos(1,1) ;
-x1 = markersPos(1,2) ;
-d1=105;
+%red 80 yellow 0 green 100 blue 0 mm
+x1 = markersPos(1,1) ;
+y1 = markersPos(1,2) ;
+d1=80;
 
-y2 = markersPos(2,1);
-x2 = markersPos(2,2);
-d2 = 25;
+x2 = markersPos(2,1);
+y2 = markersPos(2,2);
+d2 = 0;
 
-y3=markersPos(3,1);
-x3=markersPos(3,2);
-d3 = 130;
+x3=markersPos(3,1);
+y3=markersPos(3,2);
+d3 = 100;
 
-y4 = markersPos(4,1);
-x4 = markersPos(4,2);
-d4 = 30;
+x4 = markersPos(4,1);
+y4 = markersPos(4,2);
+d4 = 0;
 
 % give 0 in m1 because there is no red marker in this case
-m1 = [x1 y1 0 0 d1];
-m2 = [x2 y2 0 0 d2];
-m3 = [x3 y3 0 0 d3];
-m4 = [x4 y4 0 0 d4];
+m1 = [x1 y1 0 d1 0];
+m2 = [x2 y2 0 d2 0];
+m3 = [x3 y3 0 d3 0];
+m4 = [x4 y4 0 d4 0];
 end

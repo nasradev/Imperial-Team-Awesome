@@ -126,8 +126,8 @@ end %hasFrame
 %load('MUpad') %load the variables generated in mupad
 
 %Hand Dimentions
-tr = 100;%mm
-a = 15/180*pi;
+tr = 0;%mm
+a = 80*pi/180;
 
 %% Observer
 squareSize = 5.4; %size of the scheckerboard squares in mm
@@ -152,6 +152,8 @@ M0 = [t', m0(:,3:5)];%tool reference (local)
 M1 = [t', m1(:,3:5)];
 
 Y1 = [t', m0(:,1:2), m1(:,1:2)];%measure (camer frame)
+
+Y1 = minimum_jerk(Y1);
 
 %% Checkerboard 1 State Evolution
 % %F = double(F); %state evolution
@@ -191,30 +193,6 @@ load('K')
 
 %% Simulation
 sim('trackingSim')
-
-%% Projection to Camera Frame
-
-% P01 = P0(:,2:4)';
-% P11 = P1(:,2:4)';
-% P21 = P2(:,2:4)';
-% 
-% for i = 1:length(t)
-%     Rx = [1, 0, 0;
-%         0, cos(hatX.data(i,1)), -sin(hatX.data(i,1));
-%     0, sin(hatX.data(i,1)), cos(hatX.data(i,1))];
-%     Ry = [cos(hatX.data(i,2)), 0, sin(hatX.data(i,2));
-%         0, 1, 0;
-%         -sin(hatX.data(i,2)), 0, cos(hatX.data(i,2))];
-%     Rz = [cos(hatX.data(i,1)), -sin(hatX.data(i,1)), 0;
-%     sin(hatX.data(i,1)), cos(hatX.data(i,1)), 0;
-%     0, 0, 1];
-%     R = Rx*Ry*Rz;
-%     tran = [hatX.data(i,7); hatX.data(i,9); hatX.data(i,11)];
-%     y0(:,i) = k(1:3,1:3)*(R*P01(:,i) + tran);
-%     y1(:,i) = k(1:3,1:3)*(R*P11(:,i) + tran);
-%     y2(:,i) = k(1:3,1:3)*(R*P21(:,i) + tran);
-% end
-% 
 
 %% Data Analysis
 figure(1) %Measure Plot
@@ -264,17 +242,17 @@ plot(t, yAbsErr(:,6))
 % subplot(3,2,1)
 % plot(t, hatX.data(2:end,1), t, x(:,1), '--')
 % xlabel('time [s]')
-% ylabel('\theta [degree]')
+% ylabel('\theta [rad]')
 % grid on
 % subplot(3,2,2)
 % plot(t, hatX.data(2:end,2), t, x(:,2), '--')
 % xlabel('time [s]')
-% ylabel('\phi [degree]')
+% ylabel('\phi [rad]')
 % grid on
 % subplot(3,2,3)
 % plot(t, hatX.data(2:end,3), t, x(:,3), '--')
 % xlabel('time [s]')
-% ylabel('\psi [degree]')
+% ylabel('\psi [rad]')
 % grid on
 % subplot(3,2,4)
 % plot(t, hatX.data(2:end,7), t, x(:,4), '--')
@@ -293,32 +271,32 @@ plot(t, yAbsErr(:,6))
 % grid on
 figure(3) %State Plot
 subplot(3,2,1)
-plot(t, x(:,1))
+plot(t, X(:,2))
 xlabel('time [s]')
-ylabel('\theta [degree]')
+ylabel('\theta [rad]')
 grid on
 subplot(3,2,2)
-plot(t, x(:,2))
+plot(t, X(:,3))
 xlabel('time [s]')
-ylabel('\phi [degree]')
+ylabel('\phi [rad]')
 grid on
 subplot(3,2,3)
-plot(t, x(:,3))
+plot(t, X(:,4))
 xlabel('time [s]')
-ylabel('\psi [degree]')
+ylabel('\psi [rad]')
 grid on
 subplot(3,2,4)
-plot(t, x(:,4))
+plot(t, X(:,5))
 xlabel('time [s]')
 ylabel('x [mm]')
 grid on
 subplot(3,2,5)
-plot(t, x(:,5))
+plot(t, X(:,6))
 xlabel('time [s]')
 ylabel('y [mm]')
 grid on
 subplot(3,2,6)
-plot(t, x(:,6))
+plot(t, X(:,7))
 xlabel('time [s]')
 ylabel('z [mm]')
 grid on
@@ -356,37 +334,80 @@ plot(t, yAbsErr(:,4))
 
 figure(6) %State Plot
 subplot(2,1,1)
-plot(t, hatX1.data(2:end,1))
+plot(t, -hatX1.data(2:end,1))
 xlabel('time [s]')
-ylabel('\alpha [degree]')
+ylabel('\alpha [rad]')
 grid on
 subplot(2,1,2)
-plot(t, hatX1.data(2:end,3))
+plot(t, -hatX1.data(2:end,3))
 xlabel('time [s]')
 ylabel('d [mm]')
 grid on
 
+
+%% Results
+l = [50 100 15];
+
+%Position and Orientation of the Tool
+for i = 1:length(t)%position
+    [worldPoints(:,i), imagePoints(:,i)] = proj(a,l,hatX1.data(i,:),x(i,:),k);
+end
+
+worldAngles = x(:,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) + a];
+
+figure(7)
+subplot(3,2,1)
+plot(t, worldPoints(1,:))
+grid on
+xlabel('time [s]')
+ylabel('x [mm]')
+subplot(3,2,2)
+plot(t, worldPoints(2,:))
+grid on
+xlabel('time [s]')
+ylabel('y [mm]')
+subplot(3,2,3)
+plot(t, worldPoints(3,:))
+grid on
+xlabel('time [s]')
+ylabel('z [mm]')
+subplot(3,2,4)
+plot(t, worldAngles(:,1))
+grid on
+xlabel('time [s]')
+ylabel('\theta (z rot) [rad]')
+subplot(3,2,5)
+plot(t, worldAngles(:,2))
+grid on
+xlabel('time [s]')
+ylabel('\phi (y rot) [rad]')
+subplot(3,2,6)
+plot(t, worldAngles(:,3))
+grid on
+xlabel('time [s]')
+ylabel('\psi (x rot) [rad]')
+
 %% Plot Frame on Video
-obj1 = VideoReader('IMG_5947.MOV');
-vidWidth = obj1.Width;
-vidHeight = obj1.Height;
-mov1 = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
-
-
-secondColour = [155 200 255];
-shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-                  'CustomBorderColor',secondColour);
-for j= 2:length(hatY.data(:,1))
-  data1 = readFrame(obj1);
-  circle = int32([hatY.data(j,1) hatY.data(j,2) 2; 0 0 0]); %2 is the size
-  %refFrame = quiver3(zeros(3,1),zeros(3,1),zeros(3,1),[1;0;0],[0;1;0],[0;0;1]);
-  mov1(j).cdata = step(shapeInserter, data1, circle);
-  %mov1(j).cdata = step(shapeInserter, data1, refFrame);
-end 
-
-%Output the results to video:
-v1 = VideoWriter('resultVideos\IMG_5947_Res');
-open(v1)
-writeVideo(v1,mov1)
-close(v1)
-%end %main
+% obj1 = VideoReader('IMG_5949-hd.MOV');
+% vidWidth = obj1.Width;
+% vidHeight = obj1.Height;
+% mov1 = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
+% 
+% 
+% secondColour = [155 200 255];
+% shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+%                   'CustomBorderColor',secondColour);
+% for j= 1:length(t)
+%   data1 = readFrame(obj1);
+%   circle = int32([imagePoints(1,j) imagePoints(2,j) 2; 0 0 0]); %2 is the size
+%   %refFrame = quiver3(zeros(3,1),zeros(3,1),zeros(3,1),[1;0;0],[0;1;0],[0;0;1]);
+%   mov1(j).cdata = step(shapeInserter, data1, circle);
+%   %mov1(j).cdata = step(shapeInserter, data1, refFrame);
+% end 
+% 
+% %Output the results to video:
+% v1 = VideoWriter('resultVideos\IMG_5949-hd_Resd');
+% open(v1)
+% writeVideo(v1,mov1)
+% close(v1)
+% %end %main
