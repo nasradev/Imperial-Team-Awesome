@@ -350,13 +350,8 @@ while hasFrame(obj);
               staticYellowCounter = staticYellowCounter + 1;
           end
       end
-     %Plot the yellow marker
-     shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-    'CustomBorderColor',[255 0 0]);
-     circle = int32([ yellow(1) yellow(2) 20; 0 0 0]);
-     data = step(shapeInserter, data, circle);
-    end
-     
+      %plot red(1) and red(2)
+
     mov(k).cdata = data;
     k = k+1;
     
