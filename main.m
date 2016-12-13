@@ -12,7 +12,7 @@ squareSize = 5.4;
 load('naskosCameraParamsLaptop.mat') %or whatever
 
 %Set the video file and define output video object
-obj = VideoReader('IMG_5947.MOV');
+obj = VideoReader('IMG_6167.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
