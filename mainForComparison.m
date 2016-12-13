@@ -13,10 +13,10 @@ squareSize = 5.4;
 load('iphoneCam.mat');
 
 %M = tdfread('take1_003.csv',',');
-M = tdfread('C:\Group Project\Videos\Take 3\take1_005.csv', ',');
+M = tdfread('C:\Group Project\Videos\Take 3\take1_000.csv', ',');
 
 %Set the video file and define output video object
-obj = VideoReader('C:\Group Project\Videos\Take 3\IMG_6159.MOV');
+obj = VideoReader('C:\Group Project\Videos\Take 3\IMG_6154.MOV');
 %obj = VideoReader('C:\Group Project\Videos\Take 2\IMG_5950.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
@@ -42,6 +42,7 @@ k = 1;
 % initialise marker detection the counters
 staticRedCounter = 0;
 staticYellowCounter = 0;
+staticBlueCounter = 0;
 
 % Contrived:
 auroraStartOffset = 0;
@@ -49,6 +50,7 @@ auroraStartOffset = 0;
 imagePointsPadding = 40;
 
 campoint11 = []
+camorientation11 = []
 campoint12 = []
 while hasFrame(obj);  
     data = readFrame(obj);
@@ -159,52 +161,52 @@ while hasFrame(obj);
      circle = int32([secondBoard.imagePoints(1,1) secondBoard.imagePoints(1,2) 40; 0 0 0]);
      data = step(shapeInserter, data, circle); 
      
-      % Draw mask on the second cboard and find the next one
-      %THIRD BOARD
-      temp_data = hideCheckerboard(temp_data,...
-         [secondBoard.imagePoints(1,:);secondBoard.imagePoints(end,:)]);
-
-      if isfield(thirdBoard, 'imagePoints') == 1 && thirdBoard.imagePoints(1,1) > -1
-       xrange = round([min(thirdBoard.imagePoints(:,1)) - imagePointsPadding...
-                    :max(thirdBoard.imagePoints(:,1)) + imagePointsPadding]);
-
-       yrange = round([min(thirdBoard.imagePoints(:,2)) - imagePointsPadding...
-                    :max(thirdBoard.imagePoints(:,2)) + imagePointsPadding]);
-
-       xrange(xrange<1) = 1;
-       yrange(yrange<1) = 1;
-      xrange(xrange>sz(2)) = sz(2)-1;
-      yrange(yrange>sz(1)) = sz(1)-1;
-       board = getBoardObject(temp_data(max(yrange(1),1):...
-                                   min(yrange(end),length(data(:,1,1))),...
-                                   max(xrange(1),1):...
-                                   min(xrange(end),length(data(1,:,1))),:),...
-                                   squareSize);
-       if board.imagePoints(1,1) > -1   
-        thirdBoard.imagePoints = [];
-        thirdBoard.imagePoints(:,1) = board.imagePoints(:,1) + xrange(1);
-        thirdBoard.imagePoints(:,2) = board.imagePoints(:,2) + yrange(1);
-        thirdBoard.threePoints(:,1) = board.threePoints(:,1)...
-                                         + xrange(1);
-        thirdBoard.threePoints(:,2) = board.threePoints(:,2)...
-                                         + yrange(1);
-       else
-        thirdBoard.imagePoints = board.imagePoints;
-       end
-      else
-        thirdBoard = getBoardObject(temp_data, squareSize);
-        if isequal(firstBoard.colour,blackCboard) == 0 && ...
-                      isequal(secondBoard.colour, blackCboard) == 0
-          thirdBoard.colour = blackCboard;
-        end
-      end 
-      
-      if thirdBoard.imagePoints(1,1) > -1
-         shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-      'CustomBorderColor',thirdBoard.colour);
-       circle = int32([thirdBoard.imagePoints(1,1) thirdBoard.imagePoints(1,2) 40; 0 0 0]);
-       data = step(shapeInserter, data, circle);   
-      end   
+% %       % Draw mask on the second cboard and find the next one
+% %       %THIRD BOARD
+% %       temp_data = hideCheckerboard(temp_data,...
+% %          [secondBoard.imagePoints(1,:);secondBoard.imagePoints(end,:)]);
+% % 
+% %       if isfield(thirdBoard, 'imagePoints') == 1 && thirdBoard.imagePoints(1,1) > -1
+% %        xrange = round([min(thirdBoard.imagePoints(:,1)) - imagePointsPadding...
+% %                     :max(thirdBoard.imagePoints(:,1)) + imagePointsPadding]);
+% % 
+% %        yrange = round([min(thirdBoard.imagePoints(:,2)) - imagePointsPadding...
+% %                     :max(thirdBoard.imagePoints(:,2)) + imagePointsPadding]);
+% % 
+% %        xrange(xrange<1) = 1;
+% %        yrange(yrange<1) = 1;
+% %       xrange(xrange>sz(2)) = sz(2)-1;
+% %       yrange(yrange>sz(1)) = sz(1)-1;
+% %        board = getBoardObject(temp_data(max(yrange(1),1):...
+% %                                    min(yrange(end),length(data(:,1,1))),...
+% %                                    max(xrange(1),1):...
+% %                                    min(xrange(end),length(data(1,:,1))),:),...
+% %                                    squareSize);
+% %        if board.imagePoints(1,1) > -1   
+% %         thirdBoard.imagePoints = [];
+% %         thirdBoard.imagePoints(:,1) = board.imagePoints(:,1) + xrange(1);
+% %         thirdBoard.imagePoints(:,2) = board.imagePoints(:,2) + yrange(1);
+% %         thirdBoard.threePoints(:,1) = board.threePoints(:,1)...
+% %                                          + xrange(1);
+% %         thirdBoard.threePoints(:,2) = board.threePoints(:,2)...
+% %                                          + yrange(1);
+% %        else
+% %         thirdBoard.imagePoints = board.imagePoints;
+% %        end
+% %       else
+% %         thirdBoard = getBoardObject(temp_data, squareSize);
+% %         if isequal(firstBoard.colour,blackCboard) == 0 && ...
+% %                       isequal(secondBoard.colour, blackCboard) == 0
+% %           thirdBoard.colour = blackCboard;
+% %         end
+% %       end 
+% %       
+% %       if thirdBoard.imagePoints(1,1) > -1
+% %          shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+% %       'CustomBorderColor',thirdBoard.colour);
+% %        circle = int32([thirdBoard.imagePoints(1,1) thirdBoard.imagePoints(1,2) 40; 0 0 0]);
+% %        data = step(shapeInserter, data, circle);   
+% %       end   
        
      end
  
@@ -224,10 +226,10 @@ while hasFrame(obj);
       [R,t] = extrinsics(secondBoard.imagePoints, ...
                     secondBoard.worldPoints, cameraParams);
       P = cameraParams.IntrinsicMatrix * [R t'];
-    elseif isempty(P) &&  isequal(thirdBoard.colour, [0 0 0]) && thirdBoard.imagePoints(1,1) > 0
-      [R,t] = extrinsics(thirdBoard.imagePoints, ...
-                    thirdBoard.worldPoints, cameraParams);
-      P = cameraParams.IntrinsicMatrix * [R t'];
+%     elseif isempty(P) &&  isequal(thirdBoard.colour, [0 0 0]) && thirdBoard.imagePoints(1,1) > 0
+%       [R,t] = extrinsics(thirdBoard.imagePoints, ...
+%                     thirdBoard.worldPoints, cameraParams);
+%       P = cameraParams.IntrinsicMatrix * [R t'];
     end
     x = floor(1.4 *  (timeOffset + k)) + auroraStartOffset;
     toc
@@ -240,14 +242,15 @@ while hasFrame(obj);
                     M.Qy1(x), M.Qz1(x)];
       tic
       % Get the position of the tool sensor in Aurora frame
-      [campoint, camrotation] = getAuroraTranslation(record, R, t);
-      campoint11 = [campoint11; campoint];
+      [campoint1, camrotation] = getAuroraTranslation(record, R, t);
+      campoint11 = [campoint11; campoint1];
+      camorientation11 = [camorientation11; camrotation];
       %[focal length in mm]*[resolution]/[sensor size in mm]
       K = cameraParams.IntrinsicMatrix;
       % Transform into image point:
-      impoint = campoint * K;
+      impoint = campoint1 * K;
       % This rescales for Z
-      impoint = impoint / impoint(3);
+      impoint = impoint / impoint(3)
      shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
     'CustomBorderColor',[255 0 0]);
      circle = int32([impoint(1) impoint(2) 10; 0 0 0]);
@@ -258,7 +261,7 @@ while hasFrame(obj);
      
     end
     
-    if isempty(P) == 0 && x <= length( M.Ty2 )
+    if isfield(M, 'Ty2') && isempty(P) == 0 && x <= length( M.Ty2 )
 
       record = [M.Tx2(x), M.Ty2(x), M.Tz2(x), M.Q02(x), M.Qx2(x), ...
                     M.Qy2(x), M.Qz2(x)];
@@ -307,11 +310,9 @@ while hasFrame(obj);
       % crop the images interactively around the markers
         % HIDE CHECKERBOARD!!!
         % Red marker
-        [tinyRed, rect] = imcrop(data);
+        tinyRed = temp_data;
         [red, redArea] = getRedPos(tinyRed);
         if( red(1) ~=  0 || red(2) ~= 0)
-                red(1) = red(1) + rect(1);
-                red(2) = red(2) + rect(2);
                 % reset the counter to 0 because a marker was detected
                 staticRedCounter = 0;
         else
@@ -319,15 +320,24 @@ while hasFrame(obj);
         end
         
         % Yellow Marker
-        [tinyYellow, rect] = imcrop(data);
+        tinyYellow = temp_data;
         [yellow, yellowArea] = getYellowPos(tinyYellow);
         if( yellow(1) ~=  0 || yellow(2) ~= 0)
-                yellow(1) = yellow(1) + rect(1);
-                yellow(2) = yellow(2) + rect(2);
                 % reset the counter to 0 because a marker was detected
                 staticRedCounter = 0;
         else
                 display('No yellow marker detected');
+        end
+        
+               
+        % Blue marker
+        tinyBlue = temp_data;
+        [blue, blueArea] = getBluePos(tinyBlue);
+        if( blue(1) ~=  0 || blue(2) ~= 0)
+                % reset the counter to 0 because a marker was detected
+                staticRedCounter = 0;
+        else
+                display('No blue marker detected');
         end
     else
       % RED MARKER
@@ -380,7 +390,7 @@ while hasFrame(obj);
       % YELLOW MARKER
       % Square centered on the red marker with an area 5 times the marker
       % area
-      width = sqrt(redArea * 20);
+      width = sqrt(yellowArea * 20);
       % if the area of the marker is too small, give a min width
       if width < 50
           width = 50;
@@ -422,11 +432,59 @@ while hasFrame(obj);
               staticYellowCounter = staticYellowCounter + 1;
           end
       end
-     %Plot the yellow marker
-     shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-    'CustomBorderColor',[255 0 0]);
-     circle = int32([ yellow(1) yellow(2) 20; 0 0 0]);
-     data = step(shapeInserter, data, circle);
+      %Plot the yellow marker
+       shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+          'CustomBorderColor',[247 247 14]);
+       circle = int32([ yellow(1) yellow(2) 20; 0 0 0]);
+       data = step(shapeInserter, data, circle);
+      
+        %%%% BLUE MARKER %%%%
+        % Square centered on the red marker with an area 20 times the marker
+        % area
+        width = sqrt(blueArea * 20);
+        % if the area of the marker is too small, give a min width
+        if width < 50
+            width = 50;
+        end
+        
+        % do a rectangle
+        [rect, xrect, yrect] = doSquare(blue(1), blue(2), width, vidWidth, vidHeight);
+        % crop the image around the marker
+        tinyBlue = imcrop(data,rect);
+        % if no mrker is detected in 3 consecutive frames use a bigger
+        % image
+        if staticBlueCounter == 0
+            % get the new position of the red marker
+            lastBlue = blue;
+            [blue, blueArea] = getBluePos(tinyBlue);
+            if( blue(1) ~=  0 || blue(2) ~= 0)
+                blue(1) = blue(1) + xrect;
+                blue(2) = blue(2) + yrect;
+                % reset the counter to 0 because a marker was detected
+                staticBlueCounter = 0;
+            else
+                blue = lastBlue;
+                staticBlueCounter = staticBlueCounter + 1;
+            end
+        else
+            % Use the entire image to look for the maker
+            tinyBlue = data;
+            % get the new position of the red marker
+            lastBlue = blue;
+            [blue, blueArea] = getBluePos(tinyBlue);
+            if( blue(1) ~=  0 || blue(2) ~= 0)
+                % reset the counter to 0 because a marker was detected
+                staticBlueCounter = 0;
+            else
+                blue = lastBlue;
+                staticBlueCounter = staticBlueCounter + 1;
+            end
+        end
+           %Plot the yellow marker
+       shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+          'CustomBorderColor',[0 0 255]);
+       circle = int32([ blue(1) blue(2) 20; 0 0 0]);
+       data = step(shapeInserter, data, circle);
     end
      
     mov(k).cdata = data;

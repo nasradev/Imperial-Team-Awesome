@@ -1,4 +1,4 @@
-function [campoint, camrotation] = getAuroraTranslation(record, R, t)
+function [campoint, cameuler] = getAuroraTranslation(record, Rcb, tcb)
 
 % M = tdfread('take1_001.csv',',');
 % M = tdfread(fileID,',');
@@ -38,7 +38,7 @@ taugcb = [0 0 0];
 cbpoint = aurorapoint' * Raugcb' + taugcb;
 % Transform to camera frame now:
 %TODO: Pass this to Gigi
-campoint = cbpoint * R + t;
-camrotation = T(1:3,1:3) * R;
+campoint = cbpoint * Rcb + tcb;
+camrotation = T(1:3,1:3) * Raugcb' * Rcb;
 cameuler = rotm2eul(camrotation);
 end
