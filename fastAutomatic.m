@@ -126,7 +126,7 @@ while hasFrame(obj);
         % YELLOW MARKER
         % Square centered on the red marker with an area 5 times the marker
         % area
-        width = sqrt(redArea * 20);
+        width = sqrt(yellowArea * 20);
         % if the area of the marker is too small, give a min width
         if width < 50
             width = 50;
@@ -254,7 +254,7 @@ while hasFrame(obj);
 %                 staticBlueCounter = 0;
 %             else
 %                 blue = lastBlue;
-%                 statiBlueCounter = staticBlueCounter + 1;
+%                 staticBlueCounter = staticBlueCounter + 1;
 %             end
 %         end
 %         plot(blue(1), blue(2), '*b');
