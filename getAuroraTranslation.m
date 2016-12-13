@@ -1,4 +1,4 @@
-function [T] = getAuroraTranslation(record)
+function [campoint, camrotation] = getAuroraTranslation(record, R, t)
 
 % M = tdfread('take1_001.csv',',');
 % M = tdfread(fileID,',');
@@ -25,4 +25,20 @@ R = quat2rotm(toolQuat);
 T = [R toolTrans];
 T = [T; [0 0 0 1]];
 
+
+aurorapoint = T(1:3,4);
+Rx = [-1 0 0; 0 1 0;0 0 -1];
+%Rz = [0 1 0; -1 0 0; 0 0 1];
+% This is the rotation matrix for Aurora to Cboard
+%       Raugcb = Rx * Rz;
+Raugcb = Rx;
+% Sample Taugcb translation:
+taugcb = [0 0 0];
+% Transform the Aurora point to Cboard frame
+cbpoint = aurorapoint' * Raugcb' + taugcb;
+% Transform to camera frame now:
+%TODO: Pass this to Gigi
+campoint = cbpoint * R + t;
+camrotation = T(1:3,1:3) * R;
+cameuler = rotm2eul(camrotation);
 end

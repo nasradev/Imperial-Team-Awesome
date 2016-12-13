@@ -26,8 +26,8 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
 
         pointX = round(imagePoints(1,1));
         pointY = round(imagePoints(1,2));
-        pointX2 = round(imagePoints(12,1));
-        pointY2 = round(imagePoints(12,2));
+        pointX2 = round(imagePoints(5,1));
+        pointY2 = round(imagePoints(5,2));
         
         xrange = [min(pointX,pointX2):max(pointX,pointX2)];
         yrange = [min(pointY,pointY2):max(pointY,pointY2)];
@@ -40,7 +40,7 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
            colour = black;
         elseif (rgb(3) > (rgb(2) - 30)) && (rgb(3) > (rgb(1) - 15))
            colour = blue;
-        elseif (rgb(1) > (rgb(2) - 20)) && (rgb(1) > (rgb(3)+20))
+        elseif (rgb(1) > (rgb(2) + 5)) && (rgb(1) > (rgb(3)+20))
            colour = red; 
         end
         

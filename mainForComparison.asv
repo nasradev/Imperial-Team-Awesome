@@ -10,13 +10,13 @@ squareSize = 5.4;
 %Load up the camera parameters:
 %load('iphoneCam1080.mat') 
 %cameraParams = cameraParams1080;
-load('iphoneCam.mat')
+load('iphoneCam.mat');
 
 %M = tdfread('take1_003.csv',',');
-M = tdfread('C:\Group Project\Videos\Take 3\take1_000.csv', ',');
+M = tdfread('C:\Group Project\Videos\Take 3\take1_006.csv', ',');
 
 %Set the video file and define output video object
-obj = VideoReader('C:\Group Project\Videos\Take 3\IMG_6154.MOV');
+obj = VideoReader('C:\Group Project\Videos\Take 3\IMG_6160.MOV');
 %obj = VideoReader('C:\Group Project\Videos\Take 2\IMG_5950.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
@@ -27,9 +27,15 @@ firstBoard.colour = zeros(1,3);
 secondBoard.colour = zeros(1,3);
 thirdBoard.colour = zeros(1,3);
 
+
+blueCboard = uint8([0 0 255]);
+redCboard = uint8([255 0 0]);
+blackCboard = uint8([0 0 0]);
+    
+    
 P = [];
 % Go through the video frames
-obj.CurrentTime = 0;
+obj.CurrentTime = 3 ;
 timeOffset = round(obj.FrameRate) * (round(obj.CurrentTime));
 k = 1;
 
@@ -43,6 +49,9 @@ auroraStartOffset = 0;
 imagePointsPadding = 40;
 while hasFrame(obj);  
     data = readFrame(obj);
+    
+    data(:,:,1) = abs(data(:,:,1) - 40);
+    
     tic
     % Get the first checkerboard:
     % If we already have the first checkerboard, try to find it again in
@@ -55,11 +64,12 @@ while hasFrame(obj);
      yrange = round([min(firstBoard.imagePoints(:,2)) - imagePointsPadding...
                   :max(firstBoard.imagePoints(:,2)) + imagePointsPadding]);
     
-     
-     board = getBoardObject(data(max(yrange(1),1):...
-                                 min(yrange(end),length(data(:,1,1))),...
-                                 max(xrange(1),1):...
-                                 min(xrange(end),length(data(1,:,1))),:),...
+     sz = size(data);
+     xrange(xrange<1) = 1;
+     yrange(yrange<1) = 1;
+     xrange(xrange>sz(2)) = sz(2)-1;
+     yrange(yrange>sz(1)) = sz(1)-1;
+     board = getBoardObject(data(yrange,xrange,:),...
                                  squareSize);
     if board.imagePoints(1,1) > -1   
      firstBoard.imagePoints = [];
@@ -73,7 +83,7 @@ while hasFrame(obj);
       firstBoard.imagePoints = board.imagePoints;
     end
     else
-      firstBoard = getBoardObject(data, squareSize);
+      firstBoard = getBoardObject(data(450:720,:,:), squareSize);
     end
     
     
@@ -101,8 +111,11 @@ while hasFrame(obj);
      yrange = round([min(secondBoard.imagePoints(:,2)) - imagePointsPadding...
                   :max(secondBoard.imagePoints(:,2)) + imagePointsPadding]);
     
-     
-     board = getBoardObject(data(max(yrange(1),1):...
+     xrange(xrange<1) = 1;
+     yrange(yrange<1) = 1;
+     xrange(xrange>sz(2)) = sz(2)-1;
+     yrange(yrange>sz(1)) = sz(1)-1;
+     board = getBoardObject(temp_data(max(yrange(1),1):...
                                  min(yrange(end),length(data(:,1,1))),...
                                  max(xrange(1),1):...
                                  min(xrange(end),length(data(1,:,1))),:),...
@@ -116,12 +129,23 @@ while hasFrame(obj);
       secondBoard.threePoints(:,2) = board.threePoints(:,2)...
                                        + yrange(1);
      else
-      secondBoard.imagePoints = board.imagePoints;
+      secondBoard.imagePoints = [];
+      secondBoard.imagePoints = [-1 -1];
      end
+% %      txt = strcat('First Board: ', num2str(firstBoard.imagePoints(1,1)), ',', ...
+% %           num2str(firstBoard.imagePoints(1,2)), '. Second Board:', ...
+% %           num2str(secondBoard.imagePoints(1,1)), ',',  num2str(secondBoard.imagePoints(1,1)));
+% %         position = [50 50];
+% %      data = insertText(data, position, txt, 'FontSize',18,'BoxColor',...
+% %      [0 0 255],'BoxOpacity',0.4,'TextColor','white');
     else
       secondBoard = getBoardObject(temp_data, squareSize);
+      if isequal(firstBoard.colour,blackCboard) && ...
+                      isequal(secondBoard.colour, blackCboard)
+        secondBoard.colour = redCboard;
+      end
+        
     end
-     
      
      
      
@@ -133,17 +157,52 @@ while hasFrame(obj);
      data = step(shapeInserter, data, circle); 
      
       % Draw mask on the second cboard and find the next one
+      %THIRD BOARD
       temp_data = hideCheckerboard(temp_data,...
          [secondBoard.imagePoints(1,:);secondBoard.imagePoints(end,:)]);
-%       % Find the third board (we expect 2 hands and a base):
-%       thirdBoard = getBoardObject(temp_data, squareSize);
-%       if thirdBoard.imagePoints(1,1) > -1
-%         shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-%     'CustomBorderColor',thirdBoard.colour);
-%        circle = int32([thirdBoard.imagePoints(1,1) thirdBoard.imagePoints(1,2) 40; 0 0 0]);
-%        data = step(shapeInserter, data, circle); 
-%       end
+
+      if isfield(thirdBoard, 'imagePoints') == 1 && thirdBoard.imagePoints(1,1) > -1
+       xrange = round([min(thirdBoard.imagePoints(:,1)) - imagePointsPadding...
+                    :max(thirdBoard.imagePoints(:,1)) + imagePointsPadding]);
+
+       yrange = round([min(thirdBoard.imagePoints(:,2)) - imagePointsPadding...
+                    :max(thirdBoard.imagePoints(:,2)) + imagePointsPadding]);
+
+       xrange(xrange<1) = 1;
+       yrange(yrange<1) = 1;
+      xrange(xrange>sz(2)) = sz(2)-1;
+      yrange(yrange>sz(1)) = sz(1)-1;
+       board = getBoardObject(temp_data(max(yrange(1),1):...
+                                   min(yrange(end),length(data(:,1,1))),...
+                                   max(xrange(1),1):...
+                                   min(xrange(end),length(data(1,:,1))),:),...
+                                   squareSize);
+       if board.imagePoints(1,1) > -1   
+        thirdBoard.imagePoints = [];
+        thirdBoard.imagePoints(:,1) = board.imagePoints(:,1) + xrange(1);
+        thirdBoard.imagePoints(:,2) = board.imagePoints(:,2) + yrange(1);
+        thirdBoard.threePoints(:,1) = board.threePoints(:,1)...
+                                         + xrange(1);
+        thirdBoard.threePoints(:,2) = board.threePoints(:,2)...
+                                         + yrange(1);
+       else
+        thirdBoard.imagePoints = board.imagePoints;
+       end
+      else
+        thirdBoard = getBoardObject(temp_data, squareSize);
+        if isequal(firstBoard.colour,blackCboard) == 0 && ...
+                      isequal(secondBoard.colour, blackCboard) == 0
+          thirdBoard.colour = blackCboard;
+        end
+      end 
       
+      if thirdBoard.imagePoints(1,1) > -1
+         shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+      'CustomBorderColor',thirdBoard.colour);
+       circle = int32([thirdBoard.imagePoints(1,1) thirdBoard.imagePoints(1,2) 40; 0 0 0]);
+       data = step(shapeInserter, data, circle);   
+      end   
+       
      end
  
     else
@@ -154,18 +213,18 @@ while hasFrame(obj);
     %%%%%%%% VALIDATION %%%%%%%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Get the R and t of the World with respect to the black checkerboard: 
-    if (isempty(P)) &&  isequal(firstBoard.colour, [0 0 0])
+    if (isempty(P)) &&  isequal(firstBoard.colour, [0 0 0]) && firstBoard.imagePoints(1,1) > 0
            [R,t] = extrinsics(firstBoard.imagePoints, ...
                     firstBoard.worldPoints, cameraParams);
       P = cameraParams.IntrinsicMatrix * [R t'];
-    elseif isempty(P) &&  isequal(secondBoard.colour, [0 0 0])
+    elseif isempty(P) &&  isequal(secondBoard.colour, [0 0 0]) && secondBoard.imagePoints(1,1) > 0
       [R,t] = extrinsics(secondBoard.imagePoints, ...
                     secondBoard.worldPoints, cameraParams);
       P = cameraParams.IntrinsicMatrix * [R t'];
-%     elseif isempty(P) &&  isequal(thirdBoard.colour, [0 0 0])
-%       [R,t] = extrinsics(thirdBoard.imagePoints, ...
-%                     thirdBoard.worldPoints, cameraParams);
-%       P = cameraParams.IntrinsicMatrix * [R t'];
+    elseif isempty(P) &&  isequal(thirdBoard.colour, [0 0 0]) && thirdBoard.imagePoints(1,1) > 0
+      [R,t] = extrinsics(thirdBoard.imagePoints, ...
+                    thirdBoard.worldPoints, cameraParams);
+      P = cameraParams.IntrinsicMatrix * [R t'];
     end
     x = floor(1.4 *  (timeOffset + k)) + auroraStartOffset;
     toc
@@ -178,23 +237,7 @@ while hasFrame(obj);
                     M.Qy1(x), M.Qz1(x)];
       tic
       % Get the position of the tool sensor in Aurora frame
-      T = getAuroraTranslation(record);
-      aurorapoint = T(1:3,4);
-      Rx = [-1 0 0; 0 1 0;0 0 -1];
-      %Rz = [0 1 0; -1 0 0; 0 0 1];
-      % This is the rotation matrix for Aurora to Cboard
-%       Raugcb = Rx * Rz;
-      Raugcb = Rx;
-      % Sample Taugcb translation:
-      taugcb = [0 0 0];
-      % Transform the Aurora point to Cboard frame
-      cbpoint = aurorapoint' * Raugcb' + taugcb;
-      % Transform to camera frame now:
-      %TODO: Pass this to Gigi
-      campoint = cbpoint * R + t;
-
-  %     Pa = [R;t];
-
+      [campoint, camrotation] = getAuroraTranslation(record, R, t);
       %[focal length in mm]*[resolution]/[sensor size in mm]
       K = cameraParams.IntrinsicMatrix;
       % Transform into image point:
@@ -208,9 +251,33 @@ while hasFrame(obj);
       % BTW camera position C in world frame is:
       % C = -R'*t
      toc
-     k
+     
     end
     
+    if isempty(P) == 0 && x <= length( M.Ty2 )
+
+      record = [M.Tx2(x), M.Ty2(x), M.Tz2(x), M.Q02(x), M.Qx2(x), ...
+                    M.Qy2(x), M.Qz2(x)];
+      tic
+      % Get the position of the tool sensor in Aurora frame
+      [campoint, camrotation] = getAuroraTranslation(record, R, t);
+      %[focal length in mm]*[resolution]/[sensor size in mm]
+      K = cameraParams.IntrinsicMatrix;
+      % Transform into image point:
+      impoint = campoint * K;
+      % This rescales for Z
+      impoint = impoint / impoint(3);
+     shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+    'CustomBorderColor',[255 0 0]);
+     circle = int32([impoint(2) impoint(1) 10; 0 0 0]);
+     data = step(shapeInserter, data, circle); 
+      % BTW camera position C in world frame is:
+      % C = -R'*t
+     toc
+     
+    end
+    
+    k
     
         
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -350,12 +417,17 @@ while hasFrame(obj);
               staticYellowCounter = staticYellowCounter + 1;
           end
       end
-      %plot red(1) and red(2)
-
+     %Plot the yellow marker
+     shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+    'CustomBorderColor',[255 0 0]);
+     circle = int32([ yellow(1) yellow(2) 20; 0 0 0]);
+     data = step(shapeInserter, data, circle);
+    end
+     
     mov(k).cdata = data;
     k = k+1;
-    
 
+imshow(data);
 end %hasFrame
 
 %Output the results to video:
