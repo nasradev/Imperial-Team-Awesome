@@ -1,31 +1,27 @@
 %main code
-%function main()
-clear
-clc
-close all 
-warning off
+%TODO: Move all drawing etc. to Nas branch
+function main()
+
 %%Definitions
-%Set the video file and define output video object
-obj = VideoReader('IMG_6157.MOV');
-vidWidth = obj.Width;
-vidHeight = obj.Height;
-mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
-
-M = tdfread('take1_004.csv', ',');
-
-
-%Framerate Iphon
-%dt = 1/30;
-
-%Framerate Webcam
-%dt = 1/25;
 
 %Size of checkerboard squares
 squareSize = 5.4;
 
 %Load up the camera parameters:
-load('iphoneCam.mat') %or whatever
-cam = [cameraParams.IntrinsicMatrix', [0; 0; 1]];
+%load('iphoneCam1080.mat') 
+%cameraParams = cameraParams1080;
+load('iphoneCam.mat');
+
+%M = tdfread('take1_003.csv',',');
+M = tdfread('C:\Group Project\Videos\Take 3\take1_000.csv', ',');
+
+%Set the video file and define output video object
+obj = VideoReader('C:\Group Project\Videos\Take 3\IMG_6154.MOV');
+%obj = VideoReader('C:\Group Project\Videos\Take 2\IMG_5950.MOV');
+vidWidth = obj.Width;
+vidHeight = obj.Height;
+mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
+
 
 firstBoard.colour = zeros(1,3);
 secondBoard.colour = zeros(1,3);
@@ -56,7 +52,6 @@ imagePointsPadding = 40;
 campoint11 = []
 camorientation11 = []
 campoint12 = []
-% Go through the video frames
 while hasFrame(obj);  
     data = readFrame(obj);
     
@@ -85,30 +80,18 @@ while hasFrame(obj);
      firstBoard.imagePoints = [];
      firstBoard.imagePoints(:,1) = board.imagePoints(:,1) + xrange(1);
      firstBoard.imagePoints(:,2) = board.imagePoints(:,2) + yrange(1);
-     firstBoard.worldPoints = board.worldPoints;
      firstBoard.threePoints(:,1) = board.threePoints(:,1)...
                                         + xrange(1);
-                                    
      firstBoard.threePoints(:,2) = board.threePoints(:,2)...
                                         + yrange(1);
     else
       firstBoard.imagePoints = board.imagePoints;
-      firstBoard.worldPoints = board.worldPoints;
     end
     else
       firstBoard = getBoardObject(data, squareSize);
     end
     
-    p0(k,:) = zeros(5,1);%first step
-    p1(k,:) = zeros(5,1);
-    p2(k,:) = zeros(5,1);
     
-         
-    if k > 1 %next steps
-        p0(k,:) = p0(k-1,:);
-        p1(k,:) = p1(k-1,:);
-        p2(k,:) = p2(k-1,:);
-    end
     
     % Now check again if the first board has been found as it may not have
     % despite running getBoardObject.
@@ -146,7 +129,6 @@ while hasFrame(obj);
       secondBoard.imagePoints = [];
       secondBoard.imagePoints(:,1) = board.imagePoints(:,1) + xrange(1);
       secondBoard.imagePoints(:,2) = board.imagePoints(:,2) + yrange(1);
-      secondBoard.worldPoints = board.worldPoints;
       secondBoard.threePoints(:,1) = board.threePoints(:,1)...
                                        + xrange(1);
       secondBoard.threePoints(:,2) = board.threePoints(:,2)...
@@ -154,7 +136,6 @@ while hasFrame(obj);
      else
       secondBoard.imagePoints = [];
       secondBoard.imagePoints = [-1 -1];
-      secondBoard.worldPoints = board.worldPoints;
      end
 % %      txt = strcat('First Board: ', num2str(firstBoard.imagePoints(1,1)), ',', ...
 % %           num2str(firstBoard.imagePoints(1,2)), '. Second Board:', ...
@@ -205,14 +186,12 @@ while hasFrame(obj);
 % %         thirdBoard.imagePoints = [];
 % %         thirdBoard.imagePoints(:,1) = board.imagePoints(:,1) + xrange(1);
 % %         thirdBoard.imagePoints(:,2) = board.imagePoints(:,2) + yrange(1);
-% %         thirdBoard.worldPoints = board.worldPoints;
 % %         thirdBoard.threePoints(:,1) = board.threePoints(:,1)...
 % %                                          + xrange(1);
 % %         thirdBoard.threePoints(:,2) = board.threePoints(:,2)...
 % %                                          + yrange(1);
 % %        else
 % %         thirdBoard.imagePoints = board.imagePoints;
-% %         thirdBoard.worldPoints = board.worldPoints;
 % %        end
 % %       else
 % %         thirdBoard = getBoardObject(temp_data, squareSize);
@@ -230,34 +209,10 @@ while hasFrame(obj);
 % %       end   
        
      end
-
-    
-    if firstBoard.colour(1) == 255 && firstBoard.imagePoints(1,1)>-1
-        p0(k,:) = firstBoard.threePoints(1,:);
-        p1(k,:) = firstBoard.threePoints(2,:);
-        p2(k,:) = firstBoard.threePoints(3,:);
-        [rot, trans] = extrinsics(firstBoard.imagePoints,...
-            firstBoard.worldPoints, cameraParams);
-        x(k,:) = [rotm2eul(rot,'ZYX') trans];
-    elseif secondBoard.colour(1) == 255 && secondBoard.imagePoints(1,1)>-1
-        p0(k,:) = secondBoard.threePoints(1,:);
-        p1(k,:) = secondBoard.threePoints(2,:);
-        p2(k,:) = secondBoard.threePoints(3,:);
-        [rot, trans] = extrinsics(secondBoard.imagePoints,...
-            secondBoard.worldPoints, cameraParams);
-        x(k,:) = [rotm2eul(rot,'ZYX') trans];
-    elseif thirdBoard.colour(1) == 255 && thirdBoard.imagePoints(1,1)>-1
-        p0(k,:) = thirdBoard.threePoints(1,:);
-        p1(k,:) = thirdBoard.threePoints(2,:);
-        p2(k,:) = thirdBoard.threePoints(3,:);
-        [rot, trans] = extrinsics(thirdBoard.imagePoints,...
-            thirdBoard.worldPoints, cameraParams);
-        x(k,:) = [rotm2eul(rot,'ZYX') trans];
-    end
+ 
     else
       display('no checkerboards found')
     end
-
      
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%%%%%% VALIDATION %%%%%%%%
@@ -276,15 +231,15 @@ while hasFrame(obj);
 %                     thirdBoard.worldPoints, cameraParams);
 %       P = cameraParams.IntrinsicMatrix * [R t'];
     end
-    auroraFrame = floor(1.4 *  (timeOffset + k)) + auroraStartOffset;
+    x = floor(1.4 *  (timeOffset + k)) + auroraStartOffset;
     toc
     
     
     
-    if isempty(P) == 0 && auroraFrame <= length( M.Ty1 )
+    if isempty(P) == 0 && x <= length( M.Ty1 )
 
-      record = [M.Tx1(auroraFrame), M.Ty1(auroraFrame), M.Tz1(auroraFrame), M.Q01(auroraFrame), M.Qx1(auroraFrame), ...
-                    M.Qy1(auroraFrame), M.Qz1(auroraFrame)];
+      record = [M.Tx1(x), M.Ty1(x), M.Tz1(x), M.Q01(x), M.Qx1(x), ...
+                    M.Qy1(x), M.Qz1(x)];
       tic
       % Get the position of the tool sensor in Aurora frame
       [campoint1, camrotation] = getAuroraTranslation(record, R, t);
@@ -295,7 +250,7 @@ while hasFrame(obj);
       % Transform into image point:
       impoint = campoint1 * K;
       % This rescales for Z
-      impoint = impoint / impoint(3);
+      impoint = impoint / impoint(3)
      shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
     'CustomBorderColor',[255 0 0]);
      circle = int32([impoint(1) impoint(2) 10; 0 0 0]);
@@ -306,10 +261,10 @@ while hasFrame(obj);
      
     end
     
-    if isfield(M, 'Ty2') && isempty(P) == 0 && auroraFrame <= length( M.Ty2 )
+    if isfield(M, 'Ty2') && isempty(P) == 0 && x <= length( M.Ty2 )
 
-      record = [M.Tx2(auroraFrame), M.Ty2(auroraFrame), M.Tz2(auroraFrame), M.Q02(auroraFrame), M.Qx2(auroraFrame), ...
-                    M.Qy2(auroraFrame), M.Qz2(auroraFrame)];
+      record = [M.Tx2(x), M.Ty2(x), M.Tz2(x), M.Q02(x), M.Qx2(x), ...
+                    M.Qy2(x), M.Qz2(x)];
       tic
       % Get the position of the tool sensor in Aurora frame
       [campoint, camrotation] = getAuroraTranslation(record, R, t);
@@ -330,7 +285,7 @@ while hasFrame(obj);
      
     end
     
-    
+    k
     
         
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -358,7 +313,7 @@ while hasFrame(obj);
         tinyRed = temp_data;
         [red, redArea] = getRedPos(tinyRed);
         if( red(1) ~=  0 || red(2) ~= 0)
-                % reset the k to 0 because a marker was detected
+                % reset the counter to 0 because a marker was detected
                 staticRedCounter = 0;
         else
                 display('No red marker detected');
@@ -368,7 +323,7 @@ while hasFrame(obj);
         tinyYellow = temp_data;
         [yellow, yellowArea] = getYellowPos(tinyYellow);
         if( yellow(1) ~=  0 || yellow(2) ~= 0)
-                % reset the k to 0 because a marker was detected
+                % reset the counter to 0 because a marker was detected
                 staticRedCounter = 0;
         else
                 display('No yellow marker detected');
@@ -379,7 +334,7 @@ while hasFrame(obj);
         tinyBlue = temp_data;
         [blue, blueArea] = getBluePos(tinyBlue);
         if( blue(1) ~=  0 || blue(2) ~= 0)
-                % reset the k to 0 because a marker was detected
+                % reset the counter to 0 because a marker was detected
                 staticRedCounter = 0;
         else
                 display('No blue marker detected');
@@ -408,7 +363,7 @@ while hasFrame(obj);
           if( red(1) ~=  0 || red(2) ~= 0)
               red(1) = red(1) + xrect;
               red(2) = red(2) + yrect;
-              % reset the k to 0 because a marker was detected
+              % reset the counter to 0 because a marker was detected
               staticRedCounter = 0;
           else
               red = lastRed;
@@ -423,7 +378,7 @@ while hasFrame(obj);
           lastRed = red;
           [red, redArea] = getRedPos(tinyRed);
           if( red(1) ~=  0 || red(2) ~= 0)
-              % reset the k to 0 because a marker was detected
+              % reset the counter to 0 because a marker was detected
               staticRedCounter = 0;
           else
               red = lastRed;
@@ -455,7 +410,7 @@ while hasFrame(obj);
           if( yellow(1) ~=  0 || yellow(2) ~= 0)
               yellow(1) = yellow(1) + xrect;
               yellow(2) = yellow(2) + yrect;
-              % reset the k to 0 because a marker was detected
+              % reset the counter to 0 because a marker was detected
               staticYellowCounter = 0;
           else
               yellow = lastYellow;
@@ -470,7 +425,7 @@ while hasFrame(obj);
           lastYellow = yellow;
           [yellow, yellowArea] = getYellowPos(tinyYellow);
           if( yellow(1) ~=  0 || yellow(2) ~= 0)
-              % reset the k to 0 because a marker was detected
+              % reset the counter to 0 because a marker was detected
               staticYellowCounter = 0;
           else
               yellow = lastYellow;
@@ -483,8 +438,6 @@ while hasFrame(obj);
        circle = int32([ yellow(1) yellow(2) 20; 0 0 0]);
        data = step(shapeInserter, data, circle);
       
-       m0(k,:) = red;
-       m1(k,:) = yellow;
         %%%% BLUE MARKER %%%%
         % Square centered on the red marker with an area 20 times the marker
         % area
@@ -507,7 +460,7 @@ while hasFrame(obj);
             if( blue(1) ~=  0 || blue(2) ~= 0)
                 blue(1) = blue(1) + xrect;
                 blue(2) = blue(2) + yrect;
-                % reset the k to 0 because a marker was detected
+                % reset the counter to 0 because a marker was detected
                 staticBlueCounter = 0;
             else
                 blue = lastBlue;
@@ -520,7 +473,7 @@ while hasFrame(obj);
             lastBlue = blue;
             [blue, blueArea] = getBluePos(tinyBlue);
             if( blue(1) ~=  0 || blue(2) ~= 0)
-                % reset the k to 0 because a marker was detected
+                % reset the counter to 0 because a marker was detected
                 staticBlueCounter = 0;
             else
                 blue = lastBlue;
@@ -536,296 +489,14 @@ while hasFrame(obj);
      
     mov(k).cdata = data;
     k = k+1;
-    
-    imshow(data)
+
+imshow(data);
 end %hasFrame
 
-%% Variables Definition
-%load('MUpad') %load the variables generated in mupad
-
-%Hand Dimentions
-tr = 0;%mm
-a = 80*pi/180;
-
-%% Observer
-squareSize = 5.4; %size of the scheckerboard squares in mm
-
-%% Data
-
-dt = 1/obj.FrameRate;%0.01;
-T = dt*(k-1);
-t = dt : dt : T;
-
-P0 = [t', p0(:,4:5), zeros(length(t),1)];%checkerboard reference (local)
-P1 = [t', p1(:,4:5), zeros(length(t),1)];
-P2 = [t', p2(:,4:5), zeros(length(t),1)];
-
-Y = [t', p0(:,1:2), p1(:,1:2), p2(:,1:2)];%measure (camera frame)
-X = [t' x];
-    
-Y = minimum_jerk(Y);
-X = minimum_jerk(X);
-
-M0 = [t', m0(:,3:5)];%tool reference (local)
-M1 = [t', m1(:,3:5)];
-
-Y1 = [t', m0(:,1:2), m1(:,1:2)];%measure (camer frame)
-
-Y1 = minimum_jerk(Y1);
-
-%% Checkerboard 1 State Evolution
-% %F = double(F); %state evolution
-% F = [zeros(6,6), eye(6), zeros(6,6), zeros(6,6);
-%     zeros(6,12), eye(6), zeros(6,6);
-%     zeros(6,18), eye(6);
-%     zeros(6,24)];
-% 
-% B = [zeros(18,6); eye(6)]; %observer linear input
-% 
-% C = [eye(6), zeros(6,18)];
-s = tf('s');
-
-Gol1 = 1/s^4*eye(6);
-Gol2 = 1/s^2*eye(4);
-
-[F, B, C, D] = ssdata(Gol1);
-z0c = [p0(1,1:2), p1(1,1:2), p2(1,1:2), zeros(1,18)];%zeros(1,24);%[[0, 0, 2000, 380, 2000, 380], zeros(1,18)];
-
-
-%% Marker 1 State Evolution
-% F1 = [zeros(4,4), eye(4);
-%     zeros(4,8)];
-% 
-% B1 = [zeros(4,4); eye(4)]; %observer linear input
-% 
-% C1 = [eye(4), zeros(4,4)];
-[F1, B1, C1, D1] = ssdata(Gol2);
-z0m = [m0(1:1:2), m0(2,1:2), zeros(1,4)];
-
-%% Gain
-load('K')
-%Ksys = ss(K);
-[Ak, Bk, Ck, Dk] = ssdata(K1);
-[Ak_1, Bk_1, Ck_1, Dk_1] = ssdata(K2);%ssdata(K_1);
-
-
-%% Simulation
-sim('trackingSim')
-
-%% Data Analysis
-figure(1) %Measure Plot
-subplot(3,2,1)
-plot(t, Y(:,2), t, hatY.data(2:end,1), '--')%, t, y0(1,:),'.')
-%ylim([0,1e3])
-subplot(3,2,2)
-plot(t, Y(:,3), t, hatY.data(2:end,2), '--')%, t, y0(2,:),'.')
-%ylim([0,1e3])
-subplot(3,2,3)
-plot(t, Y(:,4), t, hatY.data(2:end,3), '--')%, t, y1(1,:),'.')
-%ylim([0,1e3])
-subplot(3,2,4)
-plot(t, Y(:,5), t, hatY.data(2:end,4), '--')%, t, y1(2,:),'.')
-%ylim([0,1e3])
-subplot(3,2,5)
-plot(t, Y(:,6), t, hatY.data(2:end,5), '--')%, t, y2(1,:),'.')
-%ylim([0,1e3])
-subplot(3,2,6)
-plot(t, Y(:,7), t, hatY.data(2:end,6), '--')%, t, y2(2,:),'.')
-%ylim([0,1e3])
-
-
-yAbsErr = abs(Y(:,2:end) - hatY.data(2:end,:));
-
-figure(2) %Measure Absolute Error Plot
-subplot(3,2,1)
-plot(t, yAbsErr(:,1))
-%ylim([0,1e3])
-subplot(3,2,2)
-plot(t, yAbsErr(:,2))
-%ylim([0,1e3])
-subplot(3,2,3)
-plot(t, yAbsErr(:,3))
-%ylim([0,1e3])
-subplot(3,2,4)
-plot(t, yAbsErr(:,4))
-%ylim([0,1e3])
-subplot(3,2,5)
-plot(t, yAbsErr(:,5))
-%ylim([0,1e3])
-subplot(3,2,6)
-plot(t, yAbsErr(:,6))
-%ylim([0,1e3])
-
-% figure(3) %State Plot
-% subplot(3,2,1)
-% plot(t, hatX.data(2:end,1), t, x(:,1), '--')
-% xlabel('time [s]')
-% ylabel('\theta [rad]')
-% grid on
-% subplot(3,2,2)
-% plot(t, hatX.data(2:end,2), t, x(:,2), '--')
-% xlabel('time [s]')
-% ylabel('\phi [rad]')
-% grid on
-% subplot(3,2,3)
-% plot(t, hatX.data(2:end,3), t, x(:,3), '--')
-% xlabel('time [s]')
-% ylabel('\psi [rad]')
-% grid on
-% subplot(3,2,4)
-% plot(t, hatX.data(2:end,7), t, x(:,4), '--')
-% xlabel('time [s]')
-% ylabel('x [mm]')
-% grid on
-% subplot(3,2,5)
-% plot(t, hatX.data(2:end,9), t, x(:,5), '--')
-% xlabel('time [s]')
-% ylabel('y [mm]')
-% grid on
-% subplot(3,2,6)
-% plot(t, hatX.data(2:end,11), t, x(:,6), '--')
-% xlabel('time [s]')
-% ylabel('z [mm]')
-% grid on
-figure(3) %State Plot
-subplot(3,2,1)
-plot(t, X(:,2))
-xlabel('time [s]')
-ylabel('\theta [rad]')
-grid on
-subplot(3,2,2)
-plot(t, X(:,3))
-xlabel('time [s]')
-ylabel('\phi [rad]')
-grid on
-subplot(3,2,3)
-plot(t, X(:,4))
-xlabel('time [s]')
-ylabel('\psi [rad]')
-grid on
-subplot(3,2,4)
-plot(t, X(:,5))
-xlabel('time [s]')
-ylabel('x [mm]')
-grid on
-subplot(3,2,5)
-plot(t, X(:,6))
-xlabel('time [s]')
-ylabel('y [mm]')
-grid on
-subplot(3,2,6)
-plot(t, X(:,7))
-xlabel('time [s]')
-ylabel('z [mm]')
-grid on
-
-figure(4) %Measure Plot
-subplot(2,2,1)
-plot(t, Y1(:,2), t, hatY1.data(2:end,1), '--')
-%ylim([0,1e3])
-subplot(2,2,2)
-plot(t, Y1(:,3), t, hatY1.data(2:end,2), '--')
-%ylim([0,1e3])
-subplot(2,2,3)
-plot(t, Y1(:,4), t, hatY1.data(2:end,3), '--')
-%ylim([0,1e3])
-subplot(2,2,4)
-plot(t, Y1(:,5), t, hatY1.data(2:end,4), '--')
-%ylim([0,1e3])
-
-
-yAbsErr = abs(Y1(:,2:end) - hatY1.data(2:end,:));
-
-figure(5) %Measure Absolute Error Plot
-subplot(2,2,1)
-plot(t, yAbsErr(:,1))
-%ylim([0,1e3])
-subplot(2,2,2)
-plot(t, yAbsErr(:,2))
-%ylim([0,1e3])
-subplot(2,2,3)
-plot(t, yAbsErr(:,3))
-%ylim([0,1e3])
-subplot(2,2,4)
-plot(t, yAbsErr(:,4))
-%ylim([0,1e3])
-
-figure(6) %State Plot
-subplot(2,1,1)
-plot(t, -hatX1.data(2:end,1))
-xlabel('time [s]')
-ylabel('\alpha [rad]')
-grid on
-subplot(2,1,2)
-plot(t, -hatX1.data(2:end,3))
-xlabel('time [s]')
-ylabel('d [mm]')
-grid on
-
-
-%% Results
-l = [50 100 15];
-
-%Position and Orientation of the Tool
-for i = 1:length(t)%position
-    [worldPoints(:,i), imagePoints(:,i)] = proj(a,l,hatX1.data(i,:),x(i,:),cam);
-end
-
-worldAngles = x(:,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) + a];
-
-figure(7)
-subplot(3,2,1)
-plot(t, worldPoints(1,:))
-grid on
-xlabel('time [s]')
-ylabel('x [mm]')
-subplot(3,2,2)
-plot(t, worldPoints(2,:))
-grid on
-xlabel('time [s]')
-ylabel('y [mm]')
-subplot(3,2,3)
-plot(t, worldPoints(3,:))
-grid on
-xlabel('time [s]')
-ylabel('z [mm]')
-subplot(3,2,4)
-plot(t, worldAngles(:,1))
-grid on
-xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
-subplot(3,2,5)
-plot(t, worldAngles(:,2))
-grid on
-xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
-subplot(3,2,6)
-plot(t, worldAngles(:,3))
-grid on
-xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
-
-%% Plot Frame on Video
-obj1 = VideoReader('IMG_6157.MOV');
-vidWidth = obj1.Width;
-vidHeight = obj1.Height;
-mov1 = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
-
-
-secondColour = [155 200 255];
-shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-                  'CustomBorderColor',secondColour);
-for j= 1:length(t)
-  data1 = readFrame(obj1);
-  circle = int32([imagePoints(1,j) imagePoints(2,j) 2; 0 0 0]); %2 is the size
-  %refFrame = quiver3(zeros(3,1),zeros(3,1),zeros(3,1),[1;0;0],[0;1;0],[0;0;1]);
-  mov1(j).cdata = step(shapeInserter, data1, circle);
-  %mov1(j).cdata = step(shapeInserter, data1, refFrame);
-end 
-
 %Output the results to video:
-v1 = VideoWriter('C:\GroupProject\resultVideos\IMG_5957_Res');
-open(v1)
-writeVideo(v1,mov1)
-close(v1)
-% %end %main
+v = VideoWriter('C:\Group Project\Videos\59withAurora');
+open(v)
+writeVideo(v,mov)
+close(v)
+
+end %main
