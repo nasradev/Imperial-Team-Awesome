@@ -250,22 +250,23 @@ while hasFrame(obj);
         p2(k,:) = firstBoard.threePoints(3,:);
         [rot, trans] = extrinsics(firstBoard.imagePoints,...
             firstBoard.worldPoints, cameraParams);
-        x(k,:) = [rotm2eul(rot,'ZYX') trans];
+        x(k,:) = [rotm2eul(rot.','ZYX') trans];
     elseif secondBoard.colour(3) == 255 && secondBoard.imagePoints(1,1)>-1
         p0(k,:) = secondBoard.threePoints(1,:);
         p1(k,:) = secondBoard.threePoints(2,:);
         p2(k,:) = secondBoard.threePoints(3,:);
         [rot, trans] = extrinsics(secondBoard.imagePoints,...
             secondBoard.worldPoints, cameraParams);
-        x(k,:) = [rotm2eul(rot,'ZYX') trans];
+        x(k,:) = [rotm2eul(rot.','ZYX') trans];
     elseif thirdBoard.colour(3) == 255 && thirdBoard.imagePoints(1,1)>-1
         p0(k,:) = thirdBoard.threePoints(1,:);
         p1(k,:) = thirdBoard.threePoints(2,:);
         p2(k,:) = thirdBoard.threePoints(3,:);
         [rot, trans] = extrinsics(thirdBoard.imagePoints,...
             thirdBoard.worldPoints, cameraParams);
-        x(k,:) = [rotm2eul(rot,'ZYX') trans];
+        x(k,:) = [rotm2eul(rot.','ZYX') trans];
     end
+    rot1(:,:,k) = rot.';
     else
       display('no checkerboards found')
     end
@@ -565,7 +566,7 @@ end %hasFrame
 
 %Hand Dimentions
 tr = 0;%mm
-a = 45*pi/180;
+a = 80*pi/180;
 
 %% Observer
 squareSize = 5.4; %size of the scheckerboard squares in mm
@@ -624,7 +625,7 @@ z0c = [p0(1,1:2), p1(1,1:2), p2(1,1:2), zeros(1,18)];%zeros(1,24);%[[0, 0, 2000,
 % 
 % C1 = [eye(4), zeros(4,4)];
 [F1, B1, C1, D1] = ssdata(Gol2);
-z0m = [m0(1,1:2), m1(1,1:2), zeros(1,4)];
+z0m = zeros(1,8);%[m0(1,1:2), m1(1,1:2), zeros(1,4)];
 
 %% Gain
 load('K')
@@ -633,7 +634,7 @@ load('K')
 [Ak_1, Bk_1, Ck_1, Dk_1] = ssdata(K2);%ssdata(K_1);
 
 %% Minimu Jerk Filter
-Dd = 0.01*T;
+Dd = 0.05*T;
 
 Af1 = [0 1 0;
     0 0 1;
@@ -824,17 +825,19 @@ grid on
 
 
 %% Results
-l = [50 100 15];
+l = [100; 50; 5];
+%hatX1.data = zeros(size(hatX1.data));
+
 worldPoints = zeros(4,length(t));
 imagePoints = zeros(3,length(t));
 
-
+worldTips = zeros(3,length(t));
 %Position and Orientation of the Tool
 for i = 1:length(t)%position
     [worldPoints(:,i), imagePoints(:,i)] = proj(a,l,hatX1.data(i,:),hatX2.data(i,:),cam);
 end
-
-worldAngles = hatX2.data(2:end,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) - a];
+%worldPoints = worldTips;
+worldAngles = hatX2.data(2:end,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) + a];
 
 figure(8)
 subplot(3,2,1)
@@ -870,88 +873,88 @@ xlabel('time [s]')
 ylabel('\psi (x rot) [rad]')
 
 %Plot abs error
-Err_x=abs(worldPoints(1,1:length(campoint11))- camorientation11(:,1)');
-Err_y=abs(worldPoints(2,1:length(campoint11))- camorientation11(:,2)');
-Err_z=abs(worldPoints(3,1:length(campoint11))- camorientation11(:,3)');
-Err_ax=abs(worldAngles(1:length(campoint11),1)'- camorientation11(:,1)');
-Err_ay=abs(worldAngles(1:length(campoint11),2)'- camorientation11(:,2)');
-Err_az=abs(worldAngles(1:length(campoint11),3)'- camorientation11(:,3)');
-figure(9)
-subplot(3,2,1)
-plot(t(1:length(campoint11)), Err_x)
-grid on
-xlabel('time [s]')
-ylabel('abs error x [mm]')
-subplot(3,2,2)
-plot(t(1:length(campoint11)), Err_y)
-grid on
-xlabel('time [s]')
-ylabel('abs error y [mm]')
-subplot(3,2,3)
-plot(t(1:length(campoint11)), Err_z)
-grid on
-xlabel('time [s]')
-ylabel('abs error z [mm]')
-subplot(3,2,4)
-plot(t(1:length(campoint11)), Err_ax)
-grid on
-xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
-subplot(3,2,5)
-plot(t(1:length(campoint11)), Err_ay)
-grid on
-xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
-subplot(3,2,6)
-plot(t(1:length(campoint11)), Err_az)
-grid on
-xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
-
-
-figure(10)
-subplot(3,2,1)
-plot(t, hatX2.data(2:end,4))
-hold on
-plot(t, x(:,4))
-grid on
-xlabel('time [s]')
-ylabel('x [mm]')
-subplot(3,2,2)
-plot(t, hatX2.data(2:end,5))
-hold on
-plot(t, x(:,5))
-grid on
-xlabel('time [s]')
-ylabel('y [mm]')
-subplot(3,2,3)
-plot(t, hatX2.data(2:end,6))
-hold on
-plot(t, x(:,6))
-grid on
-xlabel('time [s]')
-ylabel('z [mm]')
-subplot(3,2,4)
-plot(t, hatX2.data(2:end,1))
-hold on
-plot(t, x(:,1))
-grid on
-xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
-subplot(3,2,5)
-plot(t, hatX2.data(2:end,2))
-hold on
-plot(t, x(:,2))
-grid on
-xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
-subplot(3,2,6)
-plot(t, hatX2.data(2:end,3))
-hold on
-plot(t, x(:,3))
-grid on
-xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
+% Err_x=abs(worldPoints(1,1:length(campoint11))- camorientation11(:,1)');
+% Err_y=abs(worldPoints(2,1:length(campoint11))- camorientation11(:,2)');
+% Err_z=abs(worldPoints(3,1:length(campoint11))- camorientation11(:,3)');
+% Err_ax=abs(worldAngles(1:length(campoint11),1)'- camorientation11(:,1)');
+% Err_ay=abs(worldAngles(1:length(campoint11),2)'- camorientation11(:,2)');
+% Err_az=abs(worldAngles(1:length(campoint11),3)'- camorientation11(:,3)');
+% figure(9)
+% subplot(3,2,1)
+% plot(t(1:length(campoint11)), Err_x)
+% grid on
+% xlabel('time [s]')
+% ylabel('abs error x [mm]')
+% subplot(3,2,2)
+% plot(t(1:length(campoint11)), Err_y)
+% grid on
+% xlabel('time [s]')
+% ylabel('abs error y [mm]')
+% subplot(3,2,3)
+% plot(t(1:length(campoint11)), Err_z)
+% grid on
+% xlabel('time [s]')
+% ylabel('abs error z [mm]')
+% subplot(3,2,4)
+% plot(t(1:length(campoint11)), Err_ax)
+% grid on
+% xlabel('time [s]')
+% ylabel('\theta (z rot) [rad]')
+% subplot(3,2,5)
+% plot(t(1:length(campoint11)), Err_ay)
+% grid on
+% xlabel('time [s]')
+% ylabel('\phi (y rot) [rad]')
+% subplot(3,2,6)
+% plot(t(1:length(campoint11)), Err_az)
+% grid on
+% xlabel('time [s]')
+% ylabel('\psi (x rot) [rad]')
+% 
+% 
+% figure(10)
+% subplot(3,2,1)
+% plot(t, hatX2.data(2:end,4))
+% hold on
+% plot(t, x(:,4))
+% grid on
+% xlabel('time [s]')
+% ylabel('x [mm]')
+% subplot(3,2,2)
+% plot(t, hatX2.data(2:end,5))
+% hold on
+% plot(t, x(:,5))
+% grid on
+% xlabel('time [s]')
+% ylabel('y [mm]')
+% subplot(3,2,3)
+% plot(t, hatX2.data(2:end,6))
+% hold on
+% plot(t, x(:,6))
+% grid on
+% xlabel('time [s]')
+% ylabel('z [mm]')
+% subplot(3,2,4)
+% plot(t, hatX2.data(2:end,1))
+% hold on
+% plot(t, x(:,1))
+% grid on
+% xlabel('time [s]')
+% ylabel('\theta (z rot) [rad]')
+% subplot(3,2,5)
+% plot(t, hatX2.data(2:end,2))
+% hold on
+% plot(t, x(:,2))
+% grid on
+% xlabel('time [s]')
+% ylabel('\phi (y rot) [rad]')
+% subplot(3,2,6)
+% plot(t, hatX2.data(2:end,3))
+% hold on
+% plot(t, x(:,3))
+% grid on
+% xlabel('time [s]')
+% ylabel('\psi (x rot) [rad]')
 
 %% Plot Frame on Video
 
@@ -964,15 +967,17 @@ shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',..
 % %   mov1(j).cdata = step(shapeInserter, data1, circle);
 % %   %mov1(j).cdata = step(shapeInserter, data1, refFrame);
 % % end 
-
+figure(11)
 for j = 1:length(mov)
     circle = int32([imagePoints(1,j) imagePoints(2,j) 10; 0 0 0]);
     mov(j).cdata = step(shapeInserter, mov(j).cdata, circle);
+    imshow(mov(j).cdata);
+    pause(0.1);
 end
 
 %Output the results to video:
-v1 = VideoWriter('C:\GroupProject\resultVideos\IMG_6159_Res');
-open(v1)
-writeVideo(v1,mov)
-close(v1)
-% %end %main
+% v1 = VideoWriter('C:\GroupProject\resultVideos\IMG_6159_Res');
+% open(v1)
+% writeVideo(v1,mov)
+% close(v1)
+% % %end %main
