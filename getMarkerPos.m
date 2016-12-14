@@ -382,11 +382,10 @@ end
 % end
 
 %% Ploting and giving output
-%figure, 
-% imshow (image);
+% figure, imshow (image);
 % hold on
 % 
-% If you want to plot only the higher marker of each color-----------------
+% % If you want to plot only the higher marker of each color-----------------
 % if maxIndRed ~= -1
 %     plot (listMarkersRed(maxIndRed,2), listMarkersRed(maxIndRed,3),'r*')
 %     hold on
@@ -483,33 +482,33 @@ if maxIndBlue~= -1
 %    marker4_area=A_listMarkers(maxIndBlue);
 end
 %% Output
-% RealW=400; % camera field (width in mm)
-% RealH=200; % camera field (height in mm)
-% [imgH imgW]=size(image); % number of pixels
-% real_pxW=RealW/imgW; % 1 pixel width in mm
-% real_pxH=RealH/imgH; %1 pixel height in mm
+RealW=400; % camera field (width in mm)
+RealH=200; % camera field (height in mm)
+[imgH imgW]=size(image); % number of pixels
+real_pxW=RealW/imgW; % 1 pixel width in mm
+real_pxH=RealH/imgH; %1 pixel height in mm
 
 %dist in mm
-%red 80 yellow 0 green 100 blue 0 mm
-x1 = markersPos(1,1) ;
-y1 = markersPos(1,2) ;
-d1=80;
+%red 105 yellow 25 green 130 blue 30 mm
+y1 = markersPos(1,1) * real_pxW;
+x1 = markersPos(1,2) * real_pxH;
+d1=105;
 
-x2 = markersPos(2,1);
-y2 = markersPos(2,2);
-d2 = 0;
+y2 = markersPos(2,1) * real_pxW;
+x2 = markersPos(2,2) * real_pxH;
+d2 = 25;
 
-x3=markersPos(3,1);
-y3=markersPos(3,2);
-d3 = 100;
+y3=markersPos(3,1) * real_pxW;
+x3=markersPos(3,2) * real_pxH;
+d3 = 130;
 
-x4 = markersPos(4,1);
-y4 = markersPos(4,2);
-d4 = 0;
+y4 = markersPos(4,1) * real_pxW;
+x4 = markersPos(4,2) * real_pxH;
+d4 = 30;
 
 % give 0 in m1 because there is no red marker in this case
-m1 = [x1 y1 0 d1 0];
-m2 = [x2 y2 0 d2 0];
-m3 = [x3 y3 0 d3 0];
-m4 = [x4 y4 0 d4 0];
+m1 = [x1 y1 0 0 d1];
+m2 = [x2 y2 0 0 d2];
+m3 = [x3 y3 0 0 d3];
+m4 = [x4 y4 0 0 d4];
 end
