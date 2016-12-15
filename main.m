@@ -48,8 +48,17 @@ staticRedCounter = 0;
 staticYellowCounter = 0;
 staticBlueCounter = 0;
 
-% JUANA
-x = zeros(round(obj.Duration*obj.frameRate), 6);
+%%%%%%%%%%% added by JUANA%%%%%%%%%%%%%%%%%%%
+% Initialization of variables
+NoFrames = round(obj.Duration*obj.frameRate);
+x = zeros(NoFrames, 6);     % matrix for euler angles and tranlation
+p0 = zeros(NoFrames, 5);    % points of the checkerboard
+p1 = zeros(NoFrames, 5);
+p2 = zeros(NoFrames, 5);
+m0 = zeros(NoFrames, 5);    % points of the markers
+m1 = zeros(NoFrames, 5);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Contrived:
 auroraStartOffset = 0;
 
@@ -100,12 +109,7 @@ while hasFrame(obj);
     else
       firstBoard = getBoardObject(data, squareSize);
     end
-    
-    p0(k,:) = zeros(5,1);%first step
-    p1(k,:) = zeros(5,1);
-    p2(k,:) = zeros(5,1);
-    
-         
+        
     if k > 1 %next steps
         p0(k,:) = p0(k-1,:);
         p1(k,:) = p1(k-1,:);
@@ -324,7 +328,7 @@ while hasFrame(obj);
       impoint = impoint / impoint(3);
      shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
     'CustomBorderColor',[0 255 0]);
-     circle = int32([impoint(2) impoint(1) 10; 0 0 0]);
+     circle = int32([impoint(1) impoint(2) 10; 0 0 0]);
      data = step(shapeInserter, data, circle); 
       % BTW camera position C in world frame is:
       % C = -R'*t
@@ -768,6 +772,8 @@ grid on
 %% Results
 l = [50 100 15];
 
+worldPoints = zeros(4,length(t));
+imagePoints = zeros(3,length(t));
 %Position and Orientation of the Tool
 for i = 1:length(t)%position
     [worldPoints(:,i), imagePoints(:,i)] = proj(a,l,hatX1.data(i,:),x(i,:),cam);
@@ -813,7 +819,6 @@ vidWidth = obj1.Width;
 vidHeight = obj1.Height;
 mov1 = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
 
-
 secondColour = [155 200 255];
 shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
                   'CustomBorderColor',secondColour);
@@ -831,3 +836,5 @@ open(v1)
 writeVideo(v1,mov1)
 close(v1)
 % %end %main
+
+%% Skill assesment

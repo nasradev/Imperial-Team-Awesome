@@ -121,7 +121,7 @@ end
 
 %dist in mm
 %red 105 yellow 25 green 130 blue 30 mm
-d4 = 30;
+d4 = 0;
 blueArea = 0;
 
 x4 = 0; y4 = 0;
