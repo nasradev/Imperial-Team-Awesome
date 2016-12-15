@@ -155,4 +155,5 @@ end
 
 % give 0 in m1 because there is no red marker in this case
 red = [x1 y1 0 0 d1];
+
 end

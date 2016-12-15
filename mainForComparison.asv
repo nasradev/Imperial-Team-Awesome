@@ -54,7 +54,7 @@ while hasFrame(obj);
     firstBoard.colour = zeros(1,3);
     secondBoard.colour = zeros(1,3);
     thirdBoard.colour = zeros(1,3);
-    data(:,:,1) = abs(data(:,:,1) - 40);
+    %data(:,:,1) = abs(data(:,:,1) - 40);
     
     tic
     % Get the first checkerboard:
@@ -209,6 +209,10 @@ while hasFrame(obj);
 % %        data = step(shapeInserter, data, circle);   
 % %       end   
 
+  if isfield(thirdBoard, 'imagePoints') == 1 && thirdBoard.imagePoints(1,1) > -1...
+     (firstBoard.colour(1) < 70) && (firstBoard.colour(2) < 70) ...
+            && (firstBoard.colour(3) < 70)...
+                    && firstBoard.colour(3) < firstBoard.colour(1) + 30
     % COMPARE THE TWO CBOARD COLOURS
     if secondBoard.colour(1) > firstBoard.colour(1) && ...
                   secondBoard.colour(3) < firstBoard.colour(3) 
@@ -361,7 +365,7 @@ while hasFrame(obj);
 % % % % %     
 % % % % %     
 % % % % %   
-
+                  
     if k == 1
       % crop the images interactively around the markers
         % HIDE CHECKERBOARD!!!

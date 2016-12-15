@@ -17,7 +17,7 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
         worldPoints = generateCheckerboardPoints(boardSize, squareSize);
 
         % Set default colours to the first and second patterns detected.
-        colour = black;
+        colour = rgb;
 
         % Find the the colour of the detected checkerboard
 %         pointX = round(imagePoints(1,1) + (imagePoints(boardSize(1),1) - imagePoints(1,1)) / 2);
