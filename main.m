@@ -777,67 +777,85 @@ sim('trackingSim')
 %First Tool(red-yellow)
 yAbsErr = abs(Y(:,2:end) - hatY.data(2:end,:));
 
-figure(5) %Measure Absolute Error Plot
+figure(1) %Measure Absolute Error Plot
 title('Error on Mesures Tool 1')
 subplot(2,2,1)
 plot(t, yAbsErr(:,1))
-%ylim([0,1e3])
+xlabel('time [s]')
+ylabel('$$|p_{1_x} - \hat{p}_{1_x}|$$ [pixels]' ,'Interpreter','Latex')
+grid on
 subplot(2,2,2)
 plot(t, yAbsErr(:,2))
-%ylim([0,1e3])
+xlabel('time [s]')
+ylabel('$$|p_{1_y} - \hat{p}_{1_y}|$$ [pixels]' ,'Interpreter','Latex')%ylim([0,1e3])
+grid on
 subplot(2,2,3)
 plot(t, yAbsErr(:,3))
-%ylim([0,1e3])
+xlabel('time [s]')
+ylabel('$$|p_{2_x} - \hat{p}_{2_x}|$$ [pixels]' ,'Interpreter','Latex')
+grid on
 subplot(2,2,4)
 plot(t, yAbsErr(:,4))
-%ylim([0,1e3])
+xlabel('time [s]')
+ylabel('$$|p_{2_y} - \hat{p}_{2_y}|$$ [pixels]' ,'Interpreter','Latex')
+grid on
 
-figure(6) %State Plot
+figure(2) %State Plot
 title('Observer State Tool 1')
 subplot(2,1,1)
 plot(t, hatX.data(2:end,1))
 xlabel('time [s]')
-ylabel('\alpha [rad]')
+ylabel('$$\hat{\alpha}$$ [rad]' ,'Interpreter','Latex')
 grid on
 subplot(2,1,2)
 plot(t, hatX.data(2:end,3))
 xlabel('time [s]')
-ylabel('d [mm]')
+ylabel('$$\hat{d}$$ [mm]' ,'Interpreter','Latex')
 grid on
 
 %Second Tool(blue-green)
 yAbsErr = abs(Y1(:,2:end) - hatY1.data(2:end,:));
 
-figure(7) %Measure Absolute Error Plot
-title('Error on Mesures Tool 2')
+figure(3) %Measure Absolute Error Plot
+title('Error on Mesures Tool 1')
 subplot(2,2,1)
 plot(t, yAbsErr(:,1))
-%ylim([0,1e3])
+xlabel('time [s]')
+ylabel('$$|p_{1_x} - \hat{p}_{1_x}|$$ [pixels]' ,'Interpreter','Latex')
+grid on
 subplot(2,2,2)
 plot(t, yAbsErr(:,2))
-%ylim([0,1e3])
+xlabel('time [s]')
+ylabel('$$|p_{1_y} - \hat{p}_{1_y}|$$ [pixels]' ,'Interpreter','Latex')%ylim([0,1e3])
+grid on
 subplot(2,2,3)
 plot(t, yAbsErr(:,3))
-%ylim([0,1e3])
+xlabel('time [s]')
+ylabel('$$|p_{2_x} - \hat{p}_{2_x}|$$ [pixels]' ,'Interpreter','Latex')
+grid on
 subplot(2,2,4)
 plot(t, yAbsErr(:,4))
-%ylim([0,1e3])
-
-figure(8) %State Plot
-title('Observed State Tool 2')
-subplot(2,1,1)
-plot(t, hatX1.data(2:end,1))
 xlabel('time [s]')
-ylabel('\alpha [rad]')
+ylabel('$$|p_{2_y} - \hat{p}_{2_y}|$$ [pixels]' ,'Interpreter','Latex')
+grid on
+
+figure(4) %State Plot
+title('Observer State Tool 1')
+subplot(2,1,1)
+plot(t, hatX.data(2:end,1))
+xlabel('time [s]')
+ylabel('$$\hat{\alpha}$$ [rad]' ,'Interpreter','Latex')
 grid on
 subplot(2,1,2)
-plot(t, hatX1.data(2:end,3))
+plot(t, hatX.data(2:end,3))
 xlabel('time [s]')
-ylabel('d [mm]')
+ylabel('$$\hat{d}$$ [mm]' ,'Interpreter','Latex')
 grid on
 
+
+
 %% Results
-%First Tool(red-yellow)
+%% First Tool(red-yellow)
 l = [30; 20; 0];
 
 worldPoints = zeros(4,length(t));
@@ -851,79 +869,79 @@ for i = 1:length(t)%position
 end
 worldAngles = Xf.data(2:end,1:3) + [zeros(length(t),2), hatX.data(2:end,1) + a];
 
-figure(8)
+figure(5)
 subplot(3,2,1)
 plot(t(1:length(campoint11)), [worldPoints(1,1:length(campoint11)); campoint11(:,1)'])
 grid on
 xlabel('time [s]')
-ylabel('x [mm]')
+ylabel('$$P_x$$ [mm]' ,'Interpreter','Latex')
 legend('Observed','Measured')
 subplot(3,2,2)
 plot(t(1:length(campoint11)), [worldPoints(2,1:length(campoint11)); campoint11(:,2)'])
 grid on
 xlabel('time [s]')
-ylabel('y [mm]')
+ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,3)
 plot(t(1:length(campoint11)), [worldPoints(3,1:length(campoint11)); campoint11(:,3)'])
 grid on
 xlabel('time [s]')
-ylabel('z [mm]')
+ylabel('$$P_z$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,4)
 plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),1)'; camorientation11(:,1)'])
 grid on
 xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
+ylabel('$$\theta$$ (z rot) [rad]' ,'Interpreter','Latex')
 subplot(3,2,5)
 plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),2)'; camorientation11(:,2)'])
 grid on
 xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
+ylabel('$$\phi (y rot)$$ [rad]' ,'Interpreter','Latex')
 subplot(3,2,6)
 plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),3)';camorientation11(:,3)'])
 grid on
 xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
+ylabel('$$\psi (x rot)$$ [rad]' ,'Interpreter','Latex')
 
 %Plot abs error
-Err_x=abs(worldPoints(1,1:length(campoint11))- camorientation11(:,1)');
-Err_y=abs(worldPoints(2,1:length(campoint11))- camorientation11(:,2)');
-Err_z=abs(worldPoints(3,1:length(campoint11))- camorientation11(:,3)');
+Err_x=abs(worldPoints(1,1:length(campoint11))- campoint11(:,1)');
+Err_y=abs(worldPoints(2,1:length(campoint11))- campoint11(:,2)');
+Err_z=abs(worldPoints(3,1:length(campoint11))- campoint11(:,3)');
 Err_ax=abs(worldAngles(1:length(campoint11),1)'- camorientation11(:,1)');
 Err_ay=abs(worldAngles(1:length(campoint11),2)'- camorientation11(:,2)');
 Err_az=abs(worldAngles(1:length(campoint11),3)'- camorientation11(:,3)');
-figure(9)
+figure(6)
 subplot(3,2,1)
 plot(t(1:length(campoint11)), Err_x)
 grid on
 xlabel('time [s]')
-ylabel('abs error x [mm]')
+ylabel('$$|P_x - \hat{P}_x|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,2)
 plot(t(1:length(campoint11)), Err_y)
 grid on
 xlabel('time [s]')
-ylabel('abs error y [mm]')
+ylabel('$$|P_y - \hat{P}_y|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,3)
 plot(t(1:length(campoint11)), Err_z)
 grid on
 xlabel('time [s]')
-ylabel('abs error z [mm]')
+ylabel('$$|P_z - \hat{P}_z|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,4)
 plot(t(1:length(campoint11)), Err_ax)
 grid on
 xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
+ylabel('$$|\theta - \hat{\theta}|$$(z rot) [rad]' ,'Interpreter','Latex')
 subplot(3,2,5)
 plot(t(1:length(campoint11)), Err_ay)
 grid on
 xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
+ylabel('$$|\phi - \hat{\phi}|$$ (y rot) [rad]' ,'Interpreter','Latex')
 subplot(3,2,6)
 plot(t(1:length(campoint11)), Err_az)
 grid on
 xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
+ylabel('$$|\psi - \hat{\psi}|$$ (x rot) [rad]' ,'Interpreter','Latex')
 
-%Second Tool(blue-green)
+%% Second Tool(blue-green)
 l1 = [100; -110; 0];
 
 worldPoints1 = zeros(4,length(t));
@@ -934,151 +952,82 @@ for i = 1:length(t)%position
     [worldPoints1(:,i), imagePoints1(:,i)] = proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
     [frameVect1(:,:,i)] = frame_proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
 end
-worldAngles = Xf1.data(2:end,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) + a];
+worldAngles1 = Xf1.data(2:end,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) + a];
+worldAngles1(:,1) = -worldAngles1(:,1);
 
-figure(8)
+figure(7)
 subplot(3,2,1)
-plot(t(1:length(campoint11)), [worldPoints(1,1:length(campoint11)); campoint11(:,1)'])
+plot(t(1:length(campoint11)), [worldPoints1(1,1:length(campoint11)); campoint12(:,1)'])
 grid on
 xlabel('time [s]')
-ylabel('x [mm]')
+ylabel('$$P_x$$ [mm]' ,'Interpreter','Latex')
 legend('Observed','Measured')
 subplot(3,2,2)
-plot(t(1:length(campoint11)), [worldPoints(2,1:length(campoint11)); campoint11(:,2)'])
+plot(t(1:length(campoint11)), [worldPoints1(2,1:length(campoint11)); campoint12(:,2)'])
 grid on
 xlabel('time [s]')
-ylabel('y [mm]')
+ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,3)
-plot(t(1:length(campoint11)), [worldPoints(3,1:length(campoint11)); campoint11(:,3)'])
+plot(t(1:length(campoint11)), [worldPoints1(3,1:length(campoint11)); campoint12(:,3)'])
 grid on
 xlabel('time [s]')
-ylabel('z [mm]')
+ylabel('$$P_z$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,4)
-plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),1)'; camorientation11(:,1)'])
+plot(t(1:length(campoint11)), [worldAngles1(1:length(campoint11),1)'; camorientation12(:,1)'])
 grid on
 xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
+ylabel('$$\theta$$ (z rot) [rad]' ,'Interpreter','Latex')
 subplot(3,2,5)
-plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),2)'; camorientation11(:,2)'])
+plot(t(1:length(campoint11)), [worldAngles1(1:length(campoint11),2)'; camorientation12(:,2)'])
 grid on
 xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
+ylabel('$$\phi (y rot)$$ [rad]' ,'Interpreter','Latex')
 subplot(3,2,6)
-plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),3)';camorientation11(:,3)'])
+plot(t(1:length(campoint11)), [worldAngles1(1:length(campoint11),3)';camorientation12(:,3)'])
 grid on
 xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
+ylabel('$$\psi (x rot)$$ [rad]' ,'Interpreter','Latex')
 
 %Plot abs error
-Err_x=abs(worldPoints(1,1:length(campoint11))- camorientation11(:,1)');
-Err_y=abs(worldPoints(2,1:length(campoint11))- camorientation11(:,2)');
-Err_z=abs(worldPoints(3,1:length(campoint11))- camorientation11(:,3)');
-Err_ax=abs(worldAngles(1:length(campoint11),1)'- camorientation11(:,1)');
-Err_ay=abs(worldAngles(1:length(campoint11),2)'- camorientation11(:,2)');
-Err_az=abs(worldAngles(1:length(campoint11),3)'- camorientation11(:,3)');
-figure(9)
+Err_x=abs(worldPoints1(1,1:length(campoint11))- campoint12(:,1)');
+Err_y=abs(worldPoints1(2,1:length(campoint11))- campoint12(:,2)');
+Err_z=abs(worldPoints1(3,1:length(campoint11))- campoint12(:,3)');
+Err_ax=abs(worldAngles1(1:length(campoint11),1)'- camorientation12(:,1)');
+Err_ay=abs(worldAngles1(1:length(campoint11),2)'- camorientation12(:,2)');
+Err_az=abs(worldAngles1(1:length(campoint11),3)'- camorientation12(:,3)');
+figure(8)
 subplot(3,2,1)
 plot(t(1:length(campoint11)), Err_x)
 grid on
 xlabel('time [s]')
-ylabel('abs error x [mm]')
+ylabel('$$|P_x - \hat{P}_x|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,2)
 plot(t(1:length(campoint11)), Err_y)
 grid on
 xlabel('time [s]')
-ylabel('abs error y [mm]')
+ylabel('$$|P_y - \hat{P}_y|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,3)
 plot(t(1:length(campoint11)), Err_z)
 grid on
 xlabel('time [s]')
-ylabel('abs error z [mm]')
+ylabel('$$|P_z - \hat{P}_z|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,4)
 plot(t(1:length(campoint11)), Err_ax)
 grid on
 xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
+ylabel('$$|\theta - \hat{\theta}|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,5)
 plot(t(1:length(campoint11)), Err_ay)
 grid on
 xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
+ylabel('$$|\phi - \hat{\phi}|$$ [mm]' ,'Interpreter','Latex')
 subplot(3,2,6)
 plot(t(1:length(campoint11)), Err_az)
 grid on
 xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
+ylabel('$$|\psi - \hat{\psi}|$$ [mm]' ,'Interpreter','Latex')
 
-figure(8)
-subplot(3,2,1)
-plot(t(1:length(campoint11)), [worldPoints(1,1:length(campoint11)); campoint11(:,1)'])
-grid on
-xlabel('time [s]')
-ylabel('x [mm]')
-legend('Observed','Measured')
-subplot(3,2,2)
-plot(t(1:length(campoint11)), [worldPoints(2,1:length(campoint11)); campoint11(:,2)'])
-grid on
-xlabel('time [s]')
-ylabel('y [mm]')
-subplot(3,2,3)
-plot(t(1:length(campoint11)), [worldPoints(3,1:length(campoint11)); campoint11(:,3)'])
-grid on
-xlabel('time [s]')
-ylabel('z [mm]')
-subplot(3,2,4)
-plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),1)'; camorientation11(:,1)'])
-grid on
-xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
-subplot(3,2,5)
-plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),2)'; camorientation11(:,2)'])
-grid on
-xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
-subplot(3,2,6)
-plot(t(1:length(campoint11)), [worldAngles(1:length(campoint11),3)';camorientation11(:,3)'])
-grid on
-xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
 
-%Plot abs error
-Err_x=abs(worldPoints(1,1:length(campoint11))- camorientation11(:,1)');
-Err_y=abs(worldPoints(2,1:length(campoint11))- camorientation11(:,2)');
-Err_z=abs(worldPoints(3,1:length(campoint11))- camorientation11(:,3)');
-Err_ax=abs(worldAngles(1:length(campoint11),1)'- camorientation11(:,1)');
-Err_ay=abs(worldAngles(1:length(campoint11),2)'- camorientation11(:,2)');
-Err_az=abs(worldAngles(1:length(campoint11),3)'- camorientation11(:,3)');
-figure(9)
-subplot(3,2,1)
-plot(t(1:length(campoint11)), Err_x)
-grid on
-xlabel('time [s]')
-ylabel('abs error x [mm]')
-subplot(3,2,2)
-plot(t(1:length(campoint11)), Err_y)
-grid on
-xlabel('time [s]')
-ylabel('abs error y [mm]')
-subplot(3,2,3)
-plot(t(1:length(campoint11)), Err_z)
-grid on
-xlabel('time [s]')
-ylabel('abs error z [mm]')
-subplot(3,2,4)
-plot(t(1:length(campoint11)), Err_ax)
-grid on
-xlabel('time [s]')
-ylabel('\theta (z rot) [rad]')
-subplot(3,2,5)
-plot(t(1:length(campoint11)), Err_ay)
-grid on
-xlabel('time [s]')
-ylabel('\phi (y rot) [rad]')
-subplot(3,2,6)
-plot(t(1:length(campoint11)), Err_az)
-grid on
-xlabel('time [s]')
-ylabel('\psi (x rot) [rad]')
 
 %% Plot Frame on Video
 
