@@ -6,12 +6,12 @@ close all
 warning off
 %%Definitions
 %Set the video file and define output video object
-obj = VideoReader('IMG_6157.MOV');
+obj = VideoReader('IMG_6156.MOV');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
 
-M = tdfread('take1_004.csv', ',');
+M = tdfread('take1_000.csv', ',');
 
 
 %Framerate Iphon
@@ -47,17 +47,6 @@ k = 1;
 staticRedCounter = 0;
 staticYellowCounter = 0;
 staticBlueCounter = 0;
-
-%%%%%%%%%%% added by JUANA%%%%%%%%%%%%%%%%%%%
-% Initialization of variables
-NoFrames = round(obj.Duration*obj.frameRate);
-x = zeros(NoFrames, 6);     % matrix for euler angles and tranlation
-p0 = zeros(NoFrames, 5);    % points of the checkerboard
-p1 = zeros(NoFrames, 5);
-p2 = zeros(NoFrames, 5);
-m0 = zeros(NoFrames, 5);    % points of the markers
-m1 = zeros(NoFrames, 5);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Contrived:
 auroraStartOffset = 0;
@@ -109,7 +98,12 @@ while hasFrame(obj);
     else
       firstBoard = getBoardObject(data, squareSize);
     end
-        
+    
+    p0(k,:) = zeros(5,1);%first step
+    p1(k,:) = zeros(5,1);
+    p2(k,:) = zeros(5,1);
+    
+         
     if k > 1 %next steps
         p0(k,:) = p0(k-1,:);
         p1(k,:) = p1(k-1,:);
@@ -238,21 +232,21 @@ while hasFrame(obj);
      end
 
     
-    if firstBoard.colour(3) == 255 && firstBoard.imagePoints(1,1)>-1
+    if firstBoard.colour(1) == 255 && firstBoard.imagePoints(1,1)>-1
         p0(k,:) = firstBoard.threePoints(1,:);
         p1(k,:) = firstBoard.threePoints(2,:);
         p2(k,:) = firstBoard.threePoints(3,:);
         [rot, trans] = extrinsics(firstBoard.imagePoints,...
             firstBoard.worldPoints, cameraParams);
         x(k,:) = [rotm2eul(rot,'ZYX') trans];
-    elseif secondBoard.colour(3) == 255 && secondBoard.imagePoints(1,1)>-1
+    elseif secondBoard.colour(1) == 255 && secondBoard.imagePoints(1,1)>-1
         p0(k,:) = secondBoard.threePoints(1,:);
         p1(k,:) = secondBoard.threePoints(2,:);
         p2(k,:) = secondBoard.threePoints(3,:);
         [rot, trans] = extrinsics(secondBoard.imagePoints,...
             secondBoard.worldPoints, cameraParams);
         x(k,:) = [rotm2eul(rot,'ZYX') trans];
-    elseif thirdBoard.colour(3) == 255 && thirdBoard.imagePoints(1,1)>-1
+    elseif thirdBoard.colour(1) == 255 && thirdBoard.imagePoints(1,1)>-1
         p0(k,:) = thirdBoard.threePoints(1,:);
         p1(k,:) = thirdBoard.threePoints(2,:);
         p2(k,:) = thirdBoard.threePoints(3,:);
@@ -328,7 +322,7 @@ while hasFrame(obj);
       impoint = impoint / impoint(3);
      shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
     'CustomBorderColor',[0 255 0]);
-     circle = int32([impoint(1) impoint(2) 10; 0 0 0]);
+     circle = int32([impoint(2) impoint(1) 10; 0 0 0]);
      data = step(shapeInserter, data, circle); 
       % BTW camera position C in world frame is:
       % C = -R'*t
@@ -569,15 +563,15 @@ P2 = [t', p2(:,4:5), zeros(length(t),1)];
 Y = [t', p0(:,1:2), p1(:,1:2), p2(:,1:2)];%measure (camera frame)
 X = [t' x];
     
-% Y = minimum_jerk(Y);
-% X = minimum_jerk(X);
+Y = minimum_jerk(Y);
+X = minimum_jerk(X);
 
 M0 = [t', m0(:,3:5)];%tool reference (local)
 M1 = [t', m1(:,3:5)];
 
 Y1 = [t', m0(:,1:2), m1(:,1:2)];%measure (camer frame)
 
-% Y1 = minimum_jerk(Y1);
+Y1 = minimum_jerk(Y1);
 
 %% Checkerboard 1 State Evolution
 % %F = double(F); %state evolution
@@ -772,8 +766,6 @@ grid on
 %% Results
 l = [50 100 15];
 
-worldPoints = zeros(4,length(t));
-imagePoints = zeros(3,length(t));
 %Position and Orientation of the Tool
 for i = 1:length(t)%position
     [worldPoints(:,i), imagePoints(:,i)] = proj(a,l,hatX1.data(i,:),x(i,:),cam);
@@ -814,10 +806,11 @@ xlabel('time [s]')
 ylabel('\psi (x rot) [rad]')
 
 %% Plot Frame on Video
-obj1 = VideoReader('IMG_6157.MOV');
+obj1 = VideoReader('IMG_6156.MOV');
 vidWidth = obj1.Width;
 vidHeight = obj1.Height;
 mov1 = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
+
 
 secondColour = [155 200 255];
 shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
@@ -831,10 +824,8 @@ for j= 1:length(t)
 end 
 
 %Output the results to video:
-v1 = VideoWriter('C:\GroupProject\resultVideos\IMG_5957_Res');
+v1 = VideoWriter('C:\GroupProject\resultVideos\IMG_5956_Res');
 open(v1)
 writeVideo(v1,mov1)
 close(v1)
 % %end %main
-
-%% Skill assesment
