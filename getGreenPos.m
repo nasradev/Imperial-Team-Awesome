@@ -128,7 +128,7 @@ end
 
 % dist in mm
 % red 105 yellow 25 green 130 blue 30 mm
-d3 = 100;
+d3 = 70;
 greenArea = 0;
 
 x3 = 0; y3 = 0;

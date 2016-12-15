@@ -19,20 +19,20 @@ imageSat    = hsv_image(:,:,2);
 imageRed    = image(:,:,1);
 imageGreen  = image(:,:,2);
 imageBlue   = image(:,:,3);
-
-% Take off pixels with high values in the three RGB channels
-backgrThres = 110; %depending on the light (image calibration)
-for i = 1:length(image(:,1,1))
-    for j = 1:length(image(1,:,1))
-        if (imageRed(i,j) > backgrThres ...
-                && imageGreen(i,j) > backgrThres ...
-                && imageBlue(i,j) > backgrThres)
-            imageRed(i,j) = 0;
-            imageGreen(i,j) = 0;
-            imageBlue(i,j) = 0;
-        end
-    end
-end
+% 
+% % Take off pixels with high values in the three RGB channels
+% backgrThres = 110; %depending on the light (image calibration)
+% for i = 1:length(image(:,1,1))
+%     for j = 1:length(image(1,:,1))
+%         if (imageRed(i,j) > backgrThres ...
+%                 && imageGreen(i,j) > backgrThres ...
+%                 && imageBlue(i,j) > backgrThres)
+%             imageRed(i,j) = 0;
+%             imageGreen(i,j) = 0;
+%             imageBlue(i,j) = 0;
+%         end
+%     end
+% end
 
 % Generation of the mask --------------------------------------------------
 
@@ -53,7 +53,7 @@ satMask = im2bw(imageSat, levelS);
 
 % Combination of RGB masks
 yellowMask = satMask & origRedMask & origGreenMask & ~origBlueMask;
-yellowMask = imerode(yellowMask, strel('line',10,9));
+yellowMask = imerode(yellowMask, strel('line',5,5));
 
 % Elimitation of small objects --------------------------------------------
 

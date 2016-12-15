@@ -17,9 +17,9 @@ imageSat    = hsv_image(:,:,2);
 %imageValue = hsv_image(:,:,3);
 
 % RGB channels
-imageRed    = image(:,:,1);
-imageGreen  = image(:,:,2);
-imageBlue   = image(:,:,3);
+imageRed    = image(:,:,1)-20;
+imageGreen  = image(:,:,2)-20;
+imageBlue   = image(:,:,3)-20;
 
 % Take off pixels with high values in the three RGB channels
 backgrThres = 110; %depending on the light (image calibration)

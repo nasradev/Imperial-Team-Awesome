@@ -1,0 +1,17 @@
+trackingSim_sfun.obj
+c1_trackingSim.obj
+trackingSim_sfun_registry.obj
+-LIBPATH:C:\matlab\R2016a\extern\lib\win64\microsoft
+C:\matlab\R2016a\extern\lib\win64\microsoft\libmwblas.lib
+"C:\matlab\R2016a\extern\lib\win64\microsoft\sf_runtime.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libmx.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libmex.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libmat.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libfixedpoint.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libut.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libmwmathutil.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libemlrt.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libmwsl_log_load_blocks.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libmwsimulink.lib"
+"C:\matlab\R2016a\extern\lib\win64\microsoft\libmwsl_sfcn_cov_bridge.lib"
+"C:\matlab\R2016a\lib\win64\libmwipp.lib"

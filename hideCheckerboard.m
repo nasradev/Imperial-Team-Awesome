@@ -3,11 +3,13 @@ function [ temp_data ] = hideCheckerboard( data, imagePoints )
 %pt2 
     shapeInserter = vision.ShapeInserter('Fill', true,'Opacity',1);
     padding = 10;
-    rectW = abs(imagePoints(1,1) -  imagePoints(2,1)) + padding;
-    rectL = abs(imagePoints(1,2) -  imagePoints(2,2)) + padding;
+    %rectW = abs(imagePoints(1,1) -  imagePoints(2,1)) + padding;
+    %rectL = abs(imagePoints(1,2) -  imagePoints(2,2)) + padding;
+    rectW = abs(min(imagePoints(:,1)) - max(imagePoints(:,1)));
+    rectL = abs(min(imagePoints(:,2)) - max(imagePoints(:,2)));
     startX = min(imagePoints(:,1));
     startY = min(imagePoints(:,2));
-    rectangle = int32([startX startY abs(rectW) abs(rectL)]);
+    rectangle = int32([startX startY rectW rectL]);
     temp_data = step(shapeInserter, data, rectangle);
 end
 

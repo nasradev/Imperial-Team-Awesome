@@ -1,4 +1,4 @@
-function [campoint, cameuler] = getAuroraTranslation(record, Rcb, tcb)
+function [campoint, cameuler, camrotation] = getAuroraTranslation(record, Rcb, tcb)
 
 % M = tdfread('take1_001.csv',',');
 % M = tdfread(fileID,',');

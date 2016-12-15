@@ -55,6 +55,10 @@ t35 = s3.*t4.*t5;
 t34 = lz+t33-t35;
 gTp = reshape([-t15.*t17+t13.*t20,-t13.*t28+t17.*t26,t6.*t13.*t22+t10.*t17.*t22,0.0,-t13.*t15-t17.*t20,t13.*t26+t17.*t28,-t6.*t17.*t22+t10.*t13.*t22,0.0,-t8.*t22,-t7.*t22,t9,0.0,x7+t15.*t31+t20.*t34+lx.*t8.*t22,x9-t26.*t31-t28.*t34+lx.*t7.*t22,x11-lx.*t9+t6.*t22.*t34-t10.*t22.*t31,1.0],[4,4]);
 
-worldPoints = gTp*[0; 0; 0; 1];
+gTh1 = gTh(x);
+hTf1 = hTf(a,l);
+fTp1 = fTp(s);
+
+worldPoints = gTh1*hTf1*fTp1*[0; 0; 0; 1];
 imagePoints = k*worldPoints;
 imagePoints = imagePoints/imagePoints(3);
