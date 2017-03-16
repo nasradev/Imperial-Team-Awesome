@@ -6,12 +6,12 @@ close all
 warning off
 %%Definitions
 %Set the video file and define output video object
-obj = VideoReader('C:\dev\Matlab\GIOVANNI\EXCLUDE\IMG_6156.MOV');
+obj = VideoReader('C:\dev\Matlab\TeamProject\Videos\20170316_150223.mp4');
 vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata',zeros(vidHeight,vidWidth,3,'uint8'), 'colormap',[]);
 
-M = tdfread('C:\dev\Matlab\GIOVANNI\EXCLUDE\take1_005.csv', ',');
+M = tdfread('C:\dev\Matlab\TeamProject\Videos\20170316_152250.csv', ',');
 
 
 %Framerate Iphon
@@ -659,7 +659,8 @@ t = dt : dt : T;
 
 X = [t' x];
 
-X1 = [t' x1];
+%X1 = [t' x1];
+X1 = X;
 Xf0 = [x(1,1) zeros(1,2) x(1,2) zeros(1,2) x(1,3) zeros(1,2) x(1,4) ...
     zeros(1,2) x(1,5) zeros(1,2) x(1,6) zeros(1,2)];
 
@@ -667,9 +668,12 @@ M0 = [t', m0(:,3:5)];%tool reference (local)
 M1 = [t', m1(:,3:5)];
 % M2 = [t', m2(:,3:5)];%tool reference (local)
 % M3 = [t', m3(:,3:5)];
+M2 = M0;
+M3 = M1;
 
 Y = [t', m0(:,1:2), m1(:,1:2)];%measure (camer frame)
 % Y1 = [t', m2(:,1:2), m3(:,1:2)];%measure (camer frame)
+Y1 = Y;
 
 %% TODO: ASK GIGI WHAT THE FOLLOWING MAGIC DOES
 
