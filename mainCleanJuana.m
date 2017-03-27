@@ -92,7 +92,8 @@ auroraOrientations2 = [];   % checkerboard orientation (aurora frame)
 %% Go through the video frames
 while hasFrame(obj) && k <= 170
     data = readFrame(obj);
-    
+    %[data,asdasdasd] = undistortImage(data,gigicameraParams2,'OutputView','full');
+    %[data,asdasdasd] = undistortImage(data,gigicameraParams2);
     %    USE THIS HACK IF IMAGE INTENSITY IS TOO HIGH
     %    data(:,:,1) = abs(data(:,:,1) - 40);
     
@@ -132,6 +133,8 @@ while hasFrame(obj) && k <= 170
         end
     else
         firstBoard = getBoardObject(data, squareSize);
+%         firstBoard.imagePoints = [firstBoard.imagePoints(:,1) + asdasdasd(1), ...
+%              firstBoard.imagePoints(:,2) + asdasdasd(2)];
     end % Now we have a first board (probably)
     
     % Now check again if the first board has been found as it may not have
@@ -179,6 +182,8 @@ while hasFrame(obj) && k <= 170
             end
         else
             secondBoard = getBoardObject(temp_data, squareSize);
+%             secondBoard.imagePoints = [secondBoard.imagePoints(:,1) + asdasdasd(1), ...
+%              secondBoard.imagePoints(:,2) + asdasdasd(2)];
         end % Now we have the second board (probably)
         
         % Now check again if the second board has been found as it may not have
@@ -217,15 +222,15 @@ while hasFrame(obj) && k <= 170
             
             % TODO: can comment out the next 6 commands to stop drawing a
             % little circle where the checkerboards' tops is detected.
-            shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-                'CustomBorderColor',firstBoard.colour);
-            circle = int32([firstBoard.imagePoints(1,1) firstBoard.imagePoints(1,2) 40; 0 0 0]);
-            data = step(shapeInserter, data, circle);
-            
-            shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-                'CustomBorderColor',secondBoard.colour);
-            circle = int32([secondBoard.imagePoints(1,1) secondBoard.imagePoints(1,2) 40; 0 0 0]);
-            data = step(shapeInserter, data, circle);
+% %             shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+% %                 'CustomBorderColor',firstBoard.colour);
+% %             circle = int32([firstBoard.imagePoints(1,1) firstBoard.imagePoints(1,2) 40; 0 0 0]);
+% %             data = step(shapeInserter, data, circle);
+% %             
+% %             shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+% %                 'CustomBorderColor',secondBoard.colour);
+% %             circle = int32([secondBoard.imagePoints(1,1) secondBoard.imagePoints(1,2) 40; 0 0 0]);
+% %             data = step(shapeInserter, data, circle);
             
             
         else
@@ -518,6 +523,32 @@ while hasFrame(obj) && k <= 170
         toc
     end
     
+    
+    % The below draws the axes of the reference frame as
+    % defined by the R and t. K is the camera intrinsics
+    
+    % Plot the ref frame of the reference checkerboard first
+    [R,t] = extrinsics(fixedRefCheckerboard.imagePoints, ...
+            fixedRefCheckerboard.worldPoints, gigicameraParams2);
+    [origin, refx, refy, refz] = getFrameImage(R, t, K);
+    data = drawReferenceFrame(data, origin, refx, refy, refz);
+    
+    % Plot camera ref frame
+    [origin, refx, refy, refz] = getFrameImage(eye(3), [0 0 0], K);
+    data = drawReferenceFrame(data, origin, refx, refy, refz);
+    
+    % Then plot the RED checkerboard's axes
+    if (firstBoard.colour(1) == 255)
+        [R,t] = extrinsics(firstBoard.imagePoints, ...
+            firstBoard.worldPoints, gigicameraParams2);
+        [origin, refx, refy, refz] = getFrameImage(R, t, K);
+        data = drawReferenceFrame(data, origin, refx, refy, refz);
+    elseif (secondBoard.colour(1) == 255)
+        [R,t] = extrinsics(secondBoard.imagePoints, ...
+            secondBoard.worldPoints, gigicameraParams2);
+        [origin, refx, refy, refz] = getFrameImage(R, t, K);
+        data = drawReferenceFrame(data, origin, refx, refy, refz);
+    end
     mov(k).cdata = data;
     k = k + 1;
     imshow(data);
