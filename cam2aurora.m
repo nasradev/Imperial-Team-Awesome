@@ -10,12 +10,13 @@ function [auroraPoints] = cam2aurora(camPoints, R, t, squares)
     % Camera position C in world frame is:
     %cam2refCB = t * -R';?? 
     % Estimated points in the reference checkerboard frame
-    refCBpoints = (camPoints' - t) / (R); % idem as (camPoints - t') * inv(R)
+    refCBpoints = (camPoints - t) * R.'; % idem as (camPoints - t') * inv(R)
     
-    % Not sure, depends on how the refCB frame is. If x goes left and y
-    % towards the camera along the long side, and z up then:
-    refCB2auroraRot = [1 0 0; 0 -1 0; 0 0 1];
-    refCB2auroraTrans = [5 * squares, -8 * squares, 0];
+    % The refCB frame is so that:.
+    %   x goes left and y towards the camera along the long side, and z
+    %   down
+    refCB2auroraRot = [0 1 0; -1 0 0; 0 0 -1];
+    refCB2auroraTrans = [-5 * squares, 8 * squares, 0];
     % Estimated points in the reference checkerboard frame
     auroraPoints = refCBpoints * refCB2auroraRot + refCB2auroraTrans;
     auroraPoints = auroraPoints';

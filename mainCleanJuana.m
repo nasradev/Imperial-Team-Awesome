@@ -22,7 +22,7 @@ warning off
 %% Variable definitions
 % Set the video file and define output video object
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
-PATH = 'C:\dev\Matlab\TeamProject\Videos\';
+PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
 VIDEONAME = '20170316_152250Inverted';
 
 obj = VideoReader(strcat(PATH, 'aurora\', VIDEONAME, '.mp4'));
@@ -37,8 +37,8 @@ M = tdfread(strcat(PATH, 'aurora\20170316_152250.csv'), ',');
 squareSize = 5.4;
 
 %Load up the camera parameters:
-load(strcat(PATH, 'gigiCameraParams2.mat'));
-cam = [gigicameraParams2.IntrinsicMatrix', [0; 0; 1]];
+load(strcat(PATH, 'gigiCameraParams3.mat'));
+cam = [gigiCameraParams3.IntrinsicMatrix', [0; 0; 1]];
 
 % Colors of the checkerboards detected in the image
 firstBoard.colour = zeros(1,3);
@@ -86,14 +86,14 @@ imagePointsPadding = 40;
 % Aurora data for the bottom marker and the hand checkerboard
 auroraPoints1 = [];         % marker pos (aurora frame)
 auroraOrientations1 = [];   % marker orientation (aurora frame)
-auroraPoints2 = [];         % checkerboard pos (aurora frame)
+auroraPoints2 = [];         % aurora data (aurora frame)
+aurora2InRefCB = [];        % aurora data (referece checkerboard frame)
 auroraOrientations2 = [];   % checkerboard orientation (aurora frame)
 
 %% Go through the video frames
-while hasFrame(obj) && k <= 170
+while hasFrame(obj)
     data = readFrame(obj);
-    %[data,asdasdasd] = undistortImage(data,gigicameraParams2,'OutputView','full');
-    %[data,asdasdasd] = undistortImage(data,gigicameraParams2);
+    
     %    USE THIS HACK IF IMAGE INTENSITY IS TOO HIGH
     %    data(:,:,1) = abs(data(:,:,1) - 40);
     
@@ -133,8 +133,6 @@ while hasFrame(obj) && k <= 170
         end
     else
         firstBoard = getBoardObject(data, squareSize);
-%         firstBoard.imagePoints = [firstBoard.imagePoints(:,1) + asdasdasd(1), ...
-%              firstBoard.imagePoints(:,2) + asdasdasd(2)];
     end % Now we have a first board (probably)
     
     % Now check again if the first board has been found as it may not have
@@ -182,8 +180,6 @@ while hasFrame(obj) && k <= 170
             end
         else
             secondBoard = getBoardObject(temp_data, squareSize);
-%             secondBoard.imagePoints = [secondBoard.imagePoints(:,1) + asdasdasd(1), ...
-%              secondBoard.imagePoints(:,2) + asdasdasd(2)];
         end % Now we have the second board (probably)
         
         % Now check again if the second board has been found as it may not have
@@ -220,8 +216,8 @@ while hasFrame(obj) && k <= 170
                 secondBoard.colour = refBoard;
             end;
             
-            % TODO: can comment out the next 6 commands to stop drawing a
-            % little circle where the checkerboards' tops is detected.
+% %             % TODO: can comment out the next 6 commands to stop drawing a
+% %             % little circle where the checkerboards' tops is detected.
 % %             shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
 % %                 'CustomBorderColor',firstBoard.colour);
 % %             circle = int32([firstBoard.imagePoints(1,1) firstBoard.imagePoints(1,2) 40; 0 0 0]);
@@ -231,6 +227,7 @@ while hasFrame(obj) && k <= 170
 % %                 'CustomBorderColor',secondBoard.colour);
 % %             circle = int32([secondBoard.imagePoints(1,1) secondBoard.imagePoints(1,2) 40; 0 0 0]);
 % %             data = step(shapeInserter, data, circle);
+
             
             
         else
@@ -250,11 +247,11 @@ while hasFrame(obj) && k <= 170
         % Get Euler Angles and Translation Red Checkerboard
         if firstBoard.colour(1) == 255 && firstBoard.imagePoints(1,1)>-1
             [rot, trans] = extrinsics(firstBoard.imagePoints,...
-                firstBoard.worldPoints, gigicameraParams2);
+                firstBoard.worldPoints, gigiCameraParams3);
             x(k,:) = [rotm2eul(rot.','ZYX') trans];
         elseif secondBoard.colour(1) == 255 && secondBoard.imagePoints(1,1)>-1
             [rot, trans] = extrinsics(secondBoard.imagePoints,...
-                secondBoard.worldPoints, gigicameraParams2);
+                secondBoard.worldPoints, gigiCameraParams3);
             x(k,:) = [rotm2eul(rot.','ZYX') trans];
         end
         % manual filtering of the checkerboard angles
@@ -413,22 +410,24 @@ while hasFrame(obj) && k <= 170
     % Get the R and t of the World with respect to the black checkerboard:
     %                 if (isempty(P)) &&  isequal(firstBoard.colour, [0 0 0]) && firstBoard.imagePoints(1,1) > 0
     %                        [R,t] = extrinsics(firstBoard.imagePoints, ...
-    %                                 firstBoard.worldPoints, gigicameraParams2);
-    %                   P = gigicameraParams2.IntrinsicMatrix * [R t'];
+    %                                 firstBoard.worldPoints, gigiCameraParams3);
+    %                   P = gigiCameraParams3.IntrinsicMatrix * [R t'];
     %                 elseif isempty(P) &&  isequal(secondBoard.colour, [0 0 0]) && secondBoard.imagePoints(1,1) > 0
     %                   [R,t] = extrinsics(secondBoard.imagePoints, ...
-    %                                 secondBoard.worldPoints, gigicameraParams2);
-    %                   P = gigicameraParams2.IntrinsicMatrix * [R t'];
+    %                                 secondBoard.worldPoints, gigiCameraParams3);
+    %                   P = gigiCameraParams3.IntrinsicMatrix * [R t'];
     %                 elseif isempty(P) &&  isequal(thirdBoard.colour, [0 0 0]) && thirdBoard.imagePoints(1,1) > 0
     %                   [R,t] = extrinsics(thirdBoard.imagePoints, ...
-    %                                 thirdBoard.worldPoints, gigicameraParams2);
-    %                   P = gigicameraParams2.IntrinsicMatrix * [R t'];
+    %                                 thirdBoard.worldPoints, gigiCameraParams3);
+    %                   P = gigiCameraParams3.IntrinsicMatrix * [R t'];
     %
     
     if (isempty(P))
         [R,t] = extrinsics(fixedRefCheckerboard.imagePoints, ...
-            fixedRefCheckerboard.worldPoints, gigicameraParams2);
-        P = gigicameraParams2.IntrinsicMatrix * [R t'];
+            fixedRefCheckerboard.worldPoints, gigiCameraParams3);
+        P = gigiCameraParams3.IntrinsicMatrix * [R t'];
+        refR = R;
+        reft = t;
     end
     auroraFrame = floor(1.4 *  (timeOffset + k)) + auroraStartOffset;
     
@@ -454,10 +453,10 @@ while hasFrame(obj) && k <= 170
         
         tic
         % Get the position of the tool aurora sensor in camera frame
-        [auroraCurrentPoint1, cameuler, camrotation] = getAuroraTranslation(record, R, t);
+        [auroraCurrentPoint1, cameuler, camrotation] = getAuroraTranslation(record, refR, reft);
         auroraCurrentPoint1 = record(1:3);
         % Get the position of the reference CB in aurora frame
-
+        
         %Ignore Bad Fitsin
         isBadfit = M.State1(auroraFrame);
         if isBadfit(1)=='B'
@@ -468,7 +467,7 @@ while hasFrame(obj) && k <= 170
         auroraOrientations1 = [auroraOrientations1; cameuler];
         
         %[focal length in mm]*[resolution]/[sensor size in mm]
-        K = gigicameraParams2.IntrinsicMatrix;
+        K = gigiCameraParams3.IntrinsicMatrix;
         
         % Transform into image point:
         impoint = auroraCurrentPoint1 * K;
@@ -495,19 +494,29 @@ while hasFrame(obj) && k <= 170
         
         % Get the position of the tool sensor in Aurora frame
         [auroraCurrentPoint2, cameuler, camorientation2] = getAuroraTranslation(record, R, t);
+        auroraCurrentPoint2 = record(1:3);
+        auroraCurrent2InRefCB = aurora2refCB(auroraCurrentPoint2, 6.4);
+        
+        % transform the position of the red checkerboard from the cam frame
+        % to the aurora frame
+        worldPoints2AuRef(1:3,k) = cam2aurora(trans, refR, reft, 6.4);
+        points2InRefCB(1:3,k) = cam2blackCB(trans, refR, reft);
         
         % Ignore Bad Fits
         isBadfit = M.State1(auroraFrame);
         if isBadfit(1) == 'B'
             auroraCurrentPoint2 = auroraPoints2(end,:);
+            auroraCurrent2InRefCB = aurora2InRefCB(end,:);
             cameuler = auroraOrientations2(end,:);
         end
         
         auroraPoints2 = [auroraPoints2; auroraCurrentPoint2];
+        aurora2InRefCB = [aurora2InRefCB; auroraCurrent2InRefCB];
         auroraOrientations2 = [auroraOrientations2; cameuler];
+        % Data from the aurora in the fixed reference checkerboard frame
         
         %[focal length in mm]*[resolution]/[sensor size in mm]
-        K = gigicameraParams2.IntrinsicMatrix;
+        K = gigiCameraParams3.IntrinsicMatrix;
         % Transform into image point:
         impoint = auroraCurrentPoint2 * K;
         % This rescales for Z
@@ -522,33 +531,33 @@ while hasFrame(obj) && k <= 170
         % C = -R'*t
         toc
     end
-    
-    
+            
     % The below draws the axes of the reference frame as
     % defined by the R and t. K is the camera intrinsics
     
     % Plot the ref frame of the reference checkerboard first
     [R,t] = extrinsics(fixedRefCheckerboard.imagePoints, ...
-            fixedRefCheckerboard.worldPoints, gigicameraParams2);
+            fixedRefCheckerboard.worldPoints, gigiCameraParams3);
     [origin, refx, refy, refz] = getFrameImage(R, t, K);
     data = drawReferenceFrame(data, origin, refx, refy, refz);
     
     % Plot camera ref frame
-    [origin, refx, refy, refz] = getFrameImage(eye(3), [0 0 0], K);
-    data = drawReferenceFrame(data, origin, refx, refy, refz);
+%     [origin, refx, refy, refz] = getFrameImage(eye(3), [0 0 0], K);
+%     data = drawReferenceFrame(data, origin, refx, refy, refz);
     
     % Then plot the RED checkerboard's axes
     if (firstBoard.colour(1) == 255)
         [R,t] = extrinsics(firstBoard.imagePoints, ...
-            firstBoard.worldPoints, gigicameraParams2);
+            firstBoard.worldPoints, gigiCameraParams3);
         [origin, refx, refy, refz] = getFrameImage(R, t, K);
         data = drawReferenceFrame(data, origin, refx, refy, refz);
     elseif (secondBoard.colour(1) == 255)
         [R,t] = extrinsics(secondBoard.imagePoints, ...
-            secondBoard.worldPoints, gigicameraParams2);
+            secondBoard.worldPoints, gigiCameraParams3);
         [origin, refx, refy, refz] = getFrameImage(R, t, K);
         data = drawReferenceFrame(data, origin, refx, refy, refz);
     end
+    
     mov(k).cdata = data;
     k = k + 1;
     imshow(data);
@@ -660,63 +669,102 @@ for i = 1:length(time)
     [frameVect(:,:,i)] = frame_proj(a,l,-hatX.data(i,:),Xf.data(i,:),cam);
        
     % Conversion to aurora ref frame
-    worldPoints1AuRef(1:3,i) = cam2aurora(worldPoints(1:3,i), R, t, squareSize);
+    worldPoints1AuRef(1:3,i) = cam2aurora(worldPoints(1:3,i), R, t, 5.4);
+    points1InRefCB(1:3,i) = cam2blackCB(worldPoints(1:3,i), R, t);
 end
 % Estimated orientation of the Tool in camera frame
 worldAngles = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
 
 
 % Plot aurora vs estimated pos in 3D
-figure, 
+figure(2), 
 title('In aurora reference frame'),
 subplot(1,3,1)
 plot(time(1:length(auroraPoints1)), [worldPoints1AuRef(1,1:length(auroraPoints1)); auroraPoints1(:,1)'])
+ylim([-300 200])
 grid on
 xlabel('time [s]')
 ylabel('$$P_x$$ [mm]' ,'Interpreter','Latex')
 legend('Observed','Measured')
 subplot(1,3,2)
 plot(time(1:length(auroraPoints1)), [worldPoints1AuRef(2,1:length(auroraPoints1)); auroraPoints1(:,2)'])
+ylim([-300 200])
 grid on
 xlabel('time [s]')
 ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
 subplot(1,3,3)
 plot(time(1:length(auroraPoints1)), [worldPoints1AuRef(3,1:length(auroraPoints1)); auroraPoints1(:,3)'])
+ylim([-300 200])
 grid on
 xlabel('time [s]')
 ylabel('$$P_z$$ [mm]' ,'Interpreter','Latex')
 
 %% Hand checkerboard position
+
 l1 = [0; 0; 0];
 
+% Estimated 3D positions in the camera frame
 worldPoints1 = zeros(4,length(time));
+% Estimated 3D positions in the camera frame projected in the
+% image
 imagePoints1 = zeros(3,length(time));
+% Estimated 3D positions in the aurora ref frame
+%worldPoints2AuRef = zeros(size(worldPoints1));
 
-%Position and Orientation of the checkerboard
-for i = 1:length(time) %position
-    [worldPoints1(:,i), imagePoints1(:,i)] = proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
-    [frameVect1(:,:,i)] = frame_proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
-end
+% for i = 1:length(time)
+%     % Estimated position of the Tool (in 3D and image) in camera frame
+%     [worldPoints1(:,i), imagePoints1(:,i)] = proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
+%     [frameVect1(:,:,i)] = frame_proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
+%     % Conversion to aurora ref frame
+%     worldPoints2AuRef(1:3,i) = cam2aurora(worldPoints1(1:3,i), R, t, 6.4);
+% end
+% Estimated orientation of the Tool in camera frame
 worldAngles1 = Xf1.data(2:end,1:3) + [zeros(length(time),2), hatX1.data(2:end,1) + a];
-worldAngles1(:,1) = -worldAngles1(:,1);
 
 figure(7)
 subplot(1,3,1)
-plot(time(1:length(auroraPoints1)), [worldPoints1(1,1:length(auroraPoints1)); auroraPoints2(:,1)'])
+plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(1,1:length(auroraPoints2)); auroraPoints2(:,1)'])
+ylim([-160 200])
 grid on
 xlabel('time [s]')
-ylabel('$$P_x$$ [mm]' ,'Interpreter','Latex')
+ylabel('$$RedCB P_x$$ [mm]' ,'Interpreter','Latex')
 legend('Observed','Measured')
 subplot(1,3,2)
-plot(time(1:length(auroraPoints1)), [worldPoints1(2,1:length(auroraPoints1)); auroraPoints2(:,2)'])
+plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(2,1:length(auroraPoints2)); auroraPoints2(:,2)'])
+ylim([-160 200])
 grid on
 xlabel('time [s]')
-ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
+ylabel('$$RedCB P_y$$ [mm]' ,'Interpreter','Latex')
 subplot(1,3,3)
-plot(time(1:length(auroraPoints1)), [worldPoints1(3,1:length(auroraPoints1)); auroraPoints2(:,3)'])
+plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(3,1:length(auroraPoints2)); auroraPoints2(:,3)'])
+ylim([-160 200])
 grid on
 xlabel('time [s]')
-ylabel('$$P_z$$ [mm]' ,'Interpreter','Latex')
+ylabel('$$RedCB P_z$$ [mm]' ,'Interpreter','Latex')
+
+% Red checkerboard points comparison for validation in the black
+% checkerboard frame
+figure(8)
+subplot(1,3,1)
+plot(time(1:length(aurora2InRefCB)), [points2InRefCB(1,1:length(aurora2InRefCB)); aurora2InRefCB(:,1)'])
+ylim([-160 200])
+grid on
+xlabel('time [s]')
+ylabel('$$RedCB P_x$$ [mm]' ,'Interpreter','Latex')
+legend('Observed','Measured')
+subplot(1,3,2)
+plot(time(1:length(aurora2InRefCB)), [points2InRefCB(2,1:length(aurora2InRefCB)); aurora2InRefCB(:,2)'])
+ylim([-160 200])
+grid on
+xlabel('time [s]')
+ylabel('$$RedCB P_y$$ [mm]' ,'Interpreter','Latex')
+subplot(1,3,3)
+plot(time(1:length(aurora2InRefCB)), [points2InRefCB(3,1:length(aurora2InRefCB)); aurora2InRefCB(:,3)'])
+ylim([-160 200])
+grid on
+xlabel('time [s]')
+ylabel('$$RedCB P_z$$ [mm]' ,'Interpreter','Latex')
+
 
 %% Plot Frame on Video
 % Plot first tool position
