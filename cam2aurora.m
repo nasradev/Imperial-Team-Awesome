@@ -15,7 +15,7 @@ function [auroraPoints] = cam2aurora(camPoints, R, t, squares)
     % The refCB frame is so that:.
     %   x goes left and y towards the camera along the long side, and z
     %   down
-    refCB2auroraRot = [0 0 1; 0 1 0; -1 0 0];
+    refCB2auroraRot = [0 1 0; 1 0 0; 0 0 -1];
     refCB2auroraTrans = [-5 * squares, 8 * squares, 0];
     % Estimated points in the reference checkerboard frame
     auroraPoints = (refCBpoints + [8*squares, -5*squares, 0])...
