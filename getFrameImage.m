@@ -3,9 +3,10 @@ function [origin, x, y, z] = getFrameImage(R, t, K)
     E = eye(3);
     
     % Vectors in camera frame
-    Ec = E * R + t;
+    T = [t; t; t];
+    Ec = E * R + T;
     
-    origin = (t * K);
+    origin = t * K;
     
     % Vectors in image frame
     Ei = (Ec * K); % / t(3);
@@ -15,7 +16,6 @@ function [origin, x, y, z] = getFrameImage(R, t, K)
         Ei(3,:) = Ei(3,:) / Ei(3,3);
     end
     % Points to plot
-    %origin = (t * K);
     if origin(3) ~= 0
         origin = origin / origin(3);
     end

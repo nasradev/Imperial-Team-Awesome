@@ -22,8 +22,8 @@ warning off
 %% Variable definitions
 % Set the video file and define output video object
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
-PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
-VIDEONAME = '20170316_152250Inverted';
+PATH = 'C:\GroupProject\TeamProject\data\';
+VIDEONAME = '20170316_184942';
 
 obj = VideoReader(strcat(PATH, 'aurora\', VIDEONAME, '.mp4'));
 vidWidth = obj.Width;
@@ -31,14 +31,14 @@ vidHeight = obj.Height;
 mov = struct('cdata', zeros(vidHeight, vidWidth, 3, 'uint8'), 'colormap',[]);
 
 % CSV file with the groundtruth positions for validation
-M = tdfread(strcat(PATH, 'aurora\20170316_152250.csv'), ',');
+M = tdfread(strcat(PATH, 'aurora\20170316_184942.csv'), ',');
 
 %Size of checkerboard squares
 squareSize = 5.4;
 
 %Load up the camera parameters:
 load(strcat(PATH, 'gigiCameraParams3.mat'));
-cam = [gigiCameraParams3.IntrinsicMatrix', [0; 0; 1]];
+cam = [gigiCameraParams3.IntrinsicMatrix; [0, 0, 1]];%work on row vectors gigiCameraParams3.IntrinsicMatrix'
 
 % Colors of the checkerboards detected in the image
 firstBoard.colour = zeros(1,3);
@@ -460,8 +460,8 @@ while hasFrame(obj)
         %Ignore Bad Fitsin
         isBadfit = M.State1(auroraFrame);
         if isBadfit(1)=='B'
-            auroraCurrentPoint1 = auroraPoints1(end,:);
-            cameuler = auroraOrientations1(end,:);
+            auroraCurrentPoint1 = [0, 0, 0];%auroraPoints1(end,:);
+            cameuler = [0, 0, 0];%auroraOrientations1(end,:);
         end
         auroraPoints1 = [auroraPoints1; auroraCurrentPoint1];
         auroraOrientations1 = [auroraOrientations1; cameuler];
@@ -495,19 +495,19 @@ while hasFrame(obj)
         % Get the position of the tool sensor in Aurora frame
         [auroraCurrentPoint2, cameuler, camorientation2] = getAuroraTranslation(record, R, t);
         auroraCurrentPoint2 = record(1:3);
-        auroraCurrent2InRefCB = aurora2refCB(auroraCurrentPoint2, 6.4);
+        auroraCurrent2InRefCB = aurora2refCB(auroraCurrentPoint2, squareSize);
         
         % transform the position of the red checkerboard from the cam frame
         % to the aurora frame
-        worldPoints2AuRef(1:3,k) = cam2aurora(trans, refR, reft, 6.4);
+        worldPoints2AuRef(1:3,k) = cam2aurora(trans, refR, reft, squareSize);
         points2InRefCB(1:3,k) = cam2blackCB(trans, refR, reft);
         
         % Ignore Bad Fits
         isBadfit = M.State1(auroraFrame);
         if isBadfit(1) == 'B'
-            auroraCurrentPoint2 = auroraPoints2(end,:);
-            auroraCurrent2InRefCB = aurora2InRefCB(end,:);
-            cameuler = auroraOrientations2(end,:);
+            auroraCurrentPoint2 = [0, 0, 0];%auroraPoints2(end,:);
+            auroraCurrent2InRefCB = [0, 0, 0];%aurora2InRefCB(end,:);
+            cameuler = [0, 0, 0];%auroraOrientations2(end,:);
         end
         
         auroraPoints2 = [auroraPoints2; auroraCurrentPoint2];
@@ -541,10 +541,6 @@ while hasFrame(obj)
     [origin, refx, refy, refz] = getFrameImage(R, t, K);
     data = drawReferenceFrame(data, origin, refx, refy, refz);
     
-    % Plot camera ref frame
-%     [origin, refx, refy, refz] = getFrameImage(eye(3), [0 0 0], K);
-%     data = drawReferenceFrame(data, origin, refx, refy, refz);
-    
     % Then plot the RED checkerboard's axes
     if (firstBoard.colour(1) == 255)
         [R,t] = extrinsics(firstBoard.imagePoints, ...
@@ -557,10 +553,9 @@ while hasFrame(obj)
         [origin, refx, refy, refz] = getFrameImage(R, t, K);
         data = drawReferenceFrame(data, origin, refx, refy, refz);
     end
-    
     mov(k).cdata = data;
     k = k + 1;
-    imshow(data);
+    %imshow(data);
     
 end %hasFrame
 
@@ -653,24 +648,24 @@ sim('trackingSim')
 %% Data Analysis
 
 % First Tool(blue-yellow)
-l = [30; 20; 0];
+l = [-30; 70; 50];
 
 % Estimated 3D positions in the camera frame
-worldPoints = zeros(4,length(time));
+worldPoints = zeros(length(time),4);
 % Estimated 3D positions in the camera frame projected in the
 % image
-imagePoints = zeros(3,length(time));
+imagePoints = zeros(length(time),3);
 % Estimated 3D positions in the aurora ref frame
 worldPoints1AuRef = zeros(size(worldPoints));
 
 for i = 1:length(time)
     % Estimated position of the Tool (in 3D and image) in camera frame
-    [worldPoints(:,i), imagePoints(:,i)] = proj(a,l,-hatX.data(i,:),Xf.data(i,:),cam);
+    [worldPoints(i,:), imagePoints(i,:)] = proj(a,l,-hatX.data(i,:),Xf.data(i,:),cam);
     [frameVect(:,:,i)] = frame_proj(a,l,-hatX.data(i,:),Xf.data(i,:),cam);
        
     % Conversion to aurora ref frame
-    worldPoints1AuRef(1:3,i) = cam2aurora(worldPoints(1:3,i), R, t, 5.4);
-    points1InRefCB(1:3,i) = cam2blackCB(worldPoints(1:3,i), R, t);
+    worldPoints1AuRef(i,1:3) = cam2aurora(worldPoints(i,1:3), R, t, squareSize);
+    points1InRefCB(i,1:3) = cam2blackCB(worldPoints(i,1:3), R, t);
 end
 % Estimated orientation of the Tool in camera frame
 worldAngles = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
@@ -680,20 +675,20 @@ worldAngles = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + 
 figure(2), 
 title('In aurora reference frame'),
 subplot(1,3,1)
-plot(time(1:length(auroraPoints1)), [worldPoints1AuRef(1,1:length(auroraPoints1)); auroraPoints1(:,1)'])
+plot(time(1:length(auroraPoints1)), worldPoints1AuRef(1:length(auroraPoints1),1), time(1:length(auroraPoints1)), auroraPoints1(:,1)')
 ylim([-300 200])
 grid on
 xlabel('time [s]')
 ylabel('$$P_x$$ [mm]' ,'Interpreter','Latex')
 legend('Observed','Measured')
 subplot(1,3,2)
-plot(time(1:length(auroraPoints1)), [worldPoints1AuRef(2,1:length(auroraPoints1)); auroraPoints1(:,2)'])
+plot(time(1:length(auroraPoints1)), worldPoints1AuRef(1:length(auroraPoints1),2), time(1:length(auroraPoints1)), auroraPoints1(:,2)')
 ylim([-300 200])
 grid on
 xlabel('time [s]')
 ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
 subplot(1,3,3)
-plot(time(1:length(auroraPoints1)), [worldPoints1AuRef(3,1:length(auroraPoints1)); auroraPoints1(:,3)'])
+plot(time(1:length(auroraPoints1)), worldPoints1AuRef(1:length(auroraPoints1),3), time(1:length(auroraPoints1)), auroraPoints1(:,3)')
 ylim([-300 200])
 grid on
 xlabel('time [s]')
@@ -716,7 +711,7 @@ imagePoints1 = zeros(3,length(time));
 %     [worldPoints1(:,i), imagePoints1(:,i)] = proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
 %     [frameVect1(:,:,i)] = frame_proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
 %     % Conversion to aurora ref frame
-%     worldPoints2AuRef(1:3,i) = cam2aurora(worldPoints1(1:3,i), R, t, 6.4);
+%     worldPoints2AuRef(1:3,i) = cam2aurora(worldPoints1(1:3,i), R, t, squareSize);
 % end
 % Estimated orientation of the Tool in camera frame
 worldAngles1 = Xf1.data(2:end,1:3) + [zeros(length(time),2), hatX1.data(2:end,1) + a];
@@ -767,58 +762,58 @@ ylabel('$$RedCB P_z$$ [mm]' ,'Interpreter','Latex')
 
 
 %% Plot Frame on Video
-% Plot first tool position
-circleColour1 = [255 255 0];
-shapeInserter1 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-    'CustomBorderColor',circleColour1);
-
-% Blue little circle
-circleColour2 = [0 0 255];
-shapeInserter2 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-    'CustomBorderColor',circleColour2);
-
-% Plot hand checkerboard position in image
-figure(11)
-for j = 1:length(mov)
-    circle1 = int32([imagePoints(1,j) imagePoints(2,j) 10; 0 0 0]);
-    circle2 = int32([imagePoints1(1,j) imagePoints1(2,j) 10; 0 0 0]);
-    mov(j).cdata = step(shapeInserter1, mov(j).cdata, circle1);
-    mov(j).cdata = step(shapeInserter2, mov(j).cdata, circle2);
-    
-    % %First Tool
-    %       frameVect(:,1,j)=frameVect(:,1,j)/frameVect(3,1,j);
-    %       frameVect(:,2,j)=frameVect(:,2,j)/frameVect(3,2,j);
-    %       frameVect(:,3,j)=frameVect(:,3,j)/frameVect(3,3,j);
-    %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
-    %     'CustomBorderColor',[255 50 0],'LineWidth',1);
-    % % shapeInserter=vision.ShapeInserter('Shape','Lines')
-    %      lxsize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
-    %      lineScaleFactor = 1/lxsize * 50;
-    %      linex = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
-    %      data = step(shapeInserter, data, linex);
-    %
-    %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
-    %     'CustomBorderColor',[0 255 50],'LineWidth',1);
-    %
-    %      lysize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
-    %      lineScaleFactor = 1/lysize * 50;
-    %      liney = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
-    %      data = step(shapeInserter, data, liney);
-    %
-    %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
-    %     'CustomBorderColor',[50 0 255],'LineWidth',1);
-    %
-    %      lzsize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
-    %      lineScaleFactor = 1/lzsize * 50;
-    %      linez = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
-    %      data = step(shapeInserter, data, linez);
-    imshow(mov(j).cdata);
-    pause(0.1);
-end
+% % Plot first tool position
+% circleColour1 = [255 255 0];
+% shapeInserter1 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+%     'CustomBorderColor',circleColour1);
+% 
+% % Blue little circle
+% circleColour2 = [0 0 255];
+% shapeInserter2 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+%     'CustomBorderColor',circleColour2);
+% 
+% % Plot hand checkerboard position in image
+% figure(11)
+% for j = 1:length(mov)
+%     circle1 = int32([imagePoints(1,j) imagePoints(2,j) 10; 0 0 0]);
+%     circle2 = int32([imagePoints1(1,j) imagePoints1(2,j) 10; 0 0 0]);
+%     mov(j).cdata = step(shapeInserter1, mov(j).cdata, circle1);
+%     mov(j).cdata = step(shapeInserter2, mov(j).cdata, circle2);
+%     
+%     % %First Tool
+%     %       frameVect(:,1,j)=frameVect(:,1,j)/frameVect(3,1,j);
+%     %       frameVect(:,2,j)=frameVect(:,2,j)/frameVect(3,2,j);
+%     %       frameVect(:,3,j)=frameVect(:,3,j)/frameVect(3,3,j);
+%     %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
+%     %     'CustomBorderColor',[255 50 0],'LineWidth',1);
+%     % % shapeInserter=vision.ShapeInserter('Shape','Lines')
+%     %      lxsize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
+%     %      lineScaleFactor = 1/lxsize * 50;
+%     %      linex = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
+%     %      data = step(shapeInserter, data, linex);
+%     %
+%     %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
+%     %     'CustomBorderColor',[0 255 50],'LineWidth',1);
+%     %
+%     %      lysize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
+%     %      lineScaleFactor = 1/lysize * 50;
+%     %      liney = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
+%     %      data = step(shapeInserter, data, liney);
+%     %
+%     %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
+%     %     'CustomBorderColor',[50 0 255],'LineWidth',1);
+%     %
+%     %      lzsize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
+%     %      lineScaleFactor = 1/lzsize * 50;
+%     %      linez = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
+%     %      data = step(shapeInserter, data, linez);
+%     imshow(mov(j).cdata);
+%     pause(0.1);
+% end
 
 %% Output the results to video:
-v1 = VideoWriter(strcat(PATH, 'outputVideos\', VIDEONAME, 'Results'));
-open(v1)
-writeVideo(v1,mov)
-close(v1)
+% v1 = VideoWriter(strcat(PATH, 'outputVideos\', VIDEONAME, 'Results'));
+% open(v1)
+% writeVideo(v1,mov)
+% close(v1)
 % %end %main

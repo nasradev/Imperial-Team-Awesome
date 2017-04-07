@@ -59,4 +59,4 @@ gTh1 = gTh(x);
 hTf1 = hTf(a,l);
 fTp1 = fTp(s);
 
-frameVect =  k*gTh1*hTf1*fTp1*eye(4,4);
+frameVect =  (gTh1*hTf1*fTp1*eye(4,4)).'*k;%must be row vector k*gTh1*hTf1*fTp1*eye(4,4)

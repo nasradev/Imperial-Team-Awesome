@@ -59,6 +59,6 @@ gTh1 = gTh(x);
 hTf1 = hTf(a,l);
 fTp1 = fTp(s);
 
-worldPoints = gTh1*hTf1*fTp1*[0; 0; 0; 1];
-imagePoints = k*worldPoints;
+worldPoints = (gTh1*hTf1*fTp1*[0; 0; 0; 1]).';%must be row vector gTh1*hTf1*fTp1*[0; 0; 0; 1]
+imagePoints = worldPoints*k;%must be row vector k*worldPoints
 imagePoints = imagePoints/imagePoints(3);
