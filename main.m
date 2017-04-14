@@ -180,10 +180,10 @@ while hasFrame(obj) && k <= NoFrames;
         
         if secondBoard.imagePoints(1,1) > -1
             
-            shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-                'CustomBorderColor',secondBoard.colour);
-            circle = int32([secondBoard.imagePoints(1,1) secondBoard.imagePoints(1,2) 40; 0 0 0]);
-            data = step(shapeInserter, data, circle);
+%             shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+%                 'CustomBorderColor',secondBoard.colour);
+%             circle = int32([secondBoard.imagePoints(1,1) secondBoard.imagePoints(1,2) 40; 0 0 0]);
+%             data = step(shapeInserter, data, circle);
             
             % %       % Draw mask on the second cboard and find the next one
             % %       %THIRD BOARD
@@ -236,26 +236,26 @@ while hasFrame(obj) && k <= NoFrames;
             
         end
         
-        %Get Euler Angles and Translation Blue Checkerboard
-        if firstBoard.colour(3) == 255 && firstBoard.imagePoints(1,1)>-1
-            [rot, trans] = extrinsics(firstBoard.imagePoints,...
-                firstBoard.worldPoints, cameraParams);
-            x(k,:) = [rotm2eul(rot.','ZYX') trans];
-        elseif secondBoard.colour(3) == 255 && secondBoard.imagePoints(1,1)>-1
-            [rot, trans] = extrinsics(secondBoard.imagePoints,...
-                secondBoard.worldPoints, cameraParams);
-            x(k,:) = [rotm2eul(rot.','ZYX') trans];
-            %     elseif thirdBoard.colour(3) == 255 && thirdBoard.imagePoints(1,1)>-1
-            %         [rot, trans] = extrinsics(thirdBoard.imagePoints,...
-            %             thirdBoard.worldPoints, cameraParams);
-            %         x(k,:) = [rotm2eul(rot.','ZYX') trans];
-        end
-        % manual filtering of the checkerboard angles
-        if k > 1
-            if (norm(x(k,1:3)-x(k-1,1:3)) > 2.5 )
-                x(k,1:3) = x(k-1,1:3);
-            end
-        end
+%         %Get Euler Angles and Translation Blue Checkerboard
+%         if firstBoard.colour(3) == 255 && firstBoard.imagePoints(1,1)>-1
+%             [rot, trans] = extrinsics(firstBoard.imagePoints,...
+%                 firstBoard.worldPoints, cameraParams);
+%             x(k,:) = [rotm2eul(rot.','ZYX') trans];
+%         elseif secondBoard.colour(3) == 255 && secondBoard.imagePoints(1,1)>-1
+%             [rot, trans] = extrinsics(secondBoard.imagePoints,...
+%                 secondBoard.worldPoints, cameraParams);
+%             x(k,:) = [rotm2eul(rot.','ZYX') trans];
+%             %     elseif thirdBoard.colour(3) == 255 && thirdBoard.imagePoints(1,1)>-1
+%             %         [rot, trans] = extrinsics(thirdBoard.imagePoints,...
+%             %             thirdBoard.worldPoints, cameraParams);
+%             %         x(k,:) = [rotm2eul(rot.','ZYX') trans];
+%         end
+%         % manual filtering of the checkerboard angles
+%         if k > 1
+%             if (norm(x(k,1:3)-x(k-1,1:3)) > 2.5 )
+%                 x(k,1:3) = x(k-1,1:3);
+%             end
+%         end
         
         
         %Get Euler Angles and Translation Red Checkerboard
@@ -681,7 +681,7 @@ while hasFrame(obj) && k <= NoFrames;
     
     mov(k).cdata = data;
     k = k + 1;
-    %   imshow(data);
+      imshow(data);
     
 end %hasFrame
 
@@ -709,9 +709,10 @@ t = dt : dt : T;
 % X = [t' x];
 
 X1 = [t' x1];
-Xf0 = [x(1,1) zeros(1,2) x(1,2) zeros(1,2) x(1,3) zeros(1,2) x(1,4) ...
-    zeros(1,2) x(1,5) zeros(1,2) x(1,6) zeros(1,2)];
-
+% Xf0 = [x(1,1) zeros(1,2) x(1,2) zeros(1,2) x(1,3) zeros(1,2) x(1,4) ...
+%     zeros(1,2) x(1,5) zeros(1,2) x(1,6) zeros(1,2)];
+Xf1 = [x1(1,1) zeros(1,2) x1(1,2) zeros(1,2) x1(1,3) zeros(1,2) x1(1,4) ...
+    zeros(1,2) x1(1,5) zeros(1,2) x1(1,6) zeros(1,2)];
 % M0 = [t', m0(:,3:5)];%tool reference (local)
 % M1 = [t', m1(:,3:5)];
 M2 = [t', m2(:,3:5)];%tool reference (local)
@@ -923,8 +924,8 @@ grid on
 % xlabel('time [s]')
 % ylabel('\psi (x rot) [rad]')
 
-%Second Tool(blue-green)
-l1 = [100; -110; 0];
+%% Second Tool(blue-green)
+l1 = [-18; -28; -20];
 
 worldPoints1 = zeros(4,length(t));
 imagePoints1 = zeros(3,length(t));
@@ -1080,6 +1081,25 @@ worldAngles = Xf1.data(2:end,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) + a
 % xlabel('time [s]')
 % ylabel('\psi (x rot) [rad]')
 
+
+figure
+subplot(3,1,1)
+plot(t(1:length(t)), worldPoints1(1,1:length(t)))
+grid on
+xlabel('time [s]')
+ylabel('x [mm]')
+legend('Observed','Measured')
+subplot(3,1,2)
+plot(t(1:length(t)), worldPoints1(2,1:length(t)))
+grid on
+xlabel('time [s]')
+ylabel('y [mm]')
+subplot(3,1,3)
+plot(t(1:length(t)), worldPoints1(3,1:length(t)))
+grid on
+xlabel('time [s]')
+ylabel('z [mm]')
+
 %% Plot Frame on Video
 
 % % Plot first tool position
@@ -1087,9 +1107,9 @@ worldAngles = Xf1.data(2:end,1:3) + [zeros(length(t),2), hatX1.data(2:end,1) + a
 % shapeInserter1 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
 %     'CustomBorderColor',circleColour1);
 % 
-% squareColour2 = [0 0 255];
-% shapeInserter2 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-%     'CustomBorderColor',squareColour2);
+squareColour2 = [255 0 0];
+shapeInserter2 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
+    'CustomBorderColor',squareColour2);
 
 % Plot second tool position in image
 figure(11)

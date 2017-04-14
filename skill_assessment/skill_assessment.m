@@ -1,6 +1,6 @@
-function [dist] = skill_assessment(points, time)
+function [dist] = skill_assessment( time)
 close all,
-% load('3d_loop_points.mat')
+ load('3d_loop_points.mat')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % Total distance traveled
@@ -12,7 +12,7 @@ for i = 1:length(points)-1
 end
 display(dist,'Total length of path taken');
 
-desiredDist = 23000; %[mm]
+desiredDist = 200; %[mm]
 markDist = desiredDist * 100/dist;
 
 % Plot 3D trajectory
@@ -85,8 +85,11 @@ figure, plot(slope(:,3))
 xlabel('frame number')
 ylabel('slope')
 
+expertTime = 30;
+
+markTime = expertTime*100/time;
 % Compute the expertise
-mark = round(markDist);
+mark = round((markDist+markTime)/2);
 
 success = 0;
 if mark > 50
@@ -96,14 +99,14 @@ end
 [cdata,map] = imread('success.png');
 if success
     h = msgbox({sprintf('Your mark is: %d /100',mark) ...
-        sprintf('Time required: %f',mark)}, ...
+        sprintf('Time required: %d',time)}, ...
         'Congratulations','custom',cdata,map);
 end
 
 [cdata2,map2] = imread('fail.png');
 if ~success
     h = msgbox({sprintf('Your mark is: %d /100',mark) ...
-        sprintf('Time required: %f seconds',time)}, ...
+        sprintf('Time required: %d seconds',time)}, ...
         'Congratulations','custom',cdata2,map2);
 end
 end
