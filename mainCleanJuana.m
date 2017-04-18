@@ -22,16 +22,16 @@ warning off
 %% Variable definitions
 % Set the video file and define output video object
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
-PATH = 'C:\GroupProject\TeamProject\data\';
-VIDEONAME = '20170407_144906';
+PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\Lshape\';
+VIDEONAME = '20170407_145223';
 
-obj = VideoReader(strcat(PATH, '07_04_17\Lshape\', VIDEONAME, '.mp4'));
+obj = VideoReader(strcat(PATH, VIDEONAME, '.mp4'));
 vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata', zeros(vidHeight, vidWidth, 3, 'uint8'), 'colormap',[]);
 
 % CSV file with the groundtruth positions for validation
-M = tdfread(strcat(PATH, '07_04_17\Lshape\20170407_144906.csv'), ',');
+M = tdfread(strcat(PATH, '20170407_145223.csv'), ',');
 
 %Size of checkerboard squares
 squareSize = 5.1;
@@ -68,7 +68,7 @@ staticBlueCounter = 0;
 obj.CurrentTime = 0;
 timeOffset = round(obj.FrameRate) * (round(obj.CurrentTime));
 k = 1;
-NoFrames = round(obj.Duration*obj.frameRate);
+NoFrames = round((obj.Duration-timeOffset)*obj.frameRate);
 
 % Matrix for euler angles (3 first columns) and translation (3 last ones)
 % of the hand checkerboard (? quite sure)
@@ -246,13 +246,19 @@ while hasFrame(obj)
         
         % Get Euler Angles and Translation Red Checkerboard
         if firstBoard.colour(1) == 255 && firstBoard.imagePoints(1,1)>-1
-            [rot, trans] = extrinsics(firstBoard.imagePoints,...
-                firstBoard.worldPoints, gigiCameraParams3);
-            x(k,:) = [rotm2eul(rot.','ZYX') trans];
+            [R,t] = ...
+            estimateWorldCameraPose(firstBoard.imagePoints,...
+            [firstBoard.worldPoints zeros(length(firstBoard.worldPoints(:,1)), 1)],...
+            gigiCameraParams3);
+        [R, t] = cameraPoseToExtrinsics(R, t);
+            x(k,:) = [rotm2eul(R.','ZYX') t];
         elseif secondBoard.colour(1) == 255 && secondBoard.imagePoints(1,1)>-1
-            [rot, trans] = extrinsics(secondBoard.imagePoints,...
-                secondBoard.worldPoints, gigiCameraParams3);
-            x(k,:) = [rotm2eul(rot.','ZYX') trans];
+            [R,t] = ...
+                estimateWorldCameraPose(secondBoard.imagePoints,...
+                [secondBoard.worldPoints zeros(length(secondBoard.worldPoints(:,1)), 1)],...
+                gigiCameraParams3);
+            [R, t] = cameraPoseToExtrinsics(R, t);
+            x(k,:) = [rotm2eul(R.','ZYX') t];
         end
         % manual filtering of the checkerboard angles
         if k >1
@@ -423,8 +429,11 @@ while hasFrame(obj)
     %
     
     if (isempty(P))
-        [R,t] = extrinsics(fixedRefCheckerboard.imagePoints, ...
-            fixedRefCheckerboard.worldPoints, gigiCameraParams3);
+        [R,t] = ...
+            estimateWorldCameraPose(fixedRefCheckerboard.imagePoints,...
+            [fixedRefCheckerboard.worldPoints zeros(length(fixedRefCheckerboard.worldPoints(:,1)), 1)],...
+            gigiCameraParams3);
+        [R, t] = cameraPoseToExtrinsics(R, t);
         P = gigiCameraParams3.IntrinsicMatrix * [R t'];
         refR = R;
         reft = t;
@@ -499,8 +508,8 @@ while hasFrame(obj)
         
         % transform the position of the red checkerboard from the cam frame
         % to the aurora frame
-        worldPoints2AuRef(1:3,k) = cam2aurora(trans, refR, reft, squareSize);
-        points2InRefCB(1:3,k) = cam2blackCB(trans, refR, reft);
+        worldPoints2AuRef(1:3,k) = cam2aurora(t, refR, reft, squareSize);
+        points2InRefCB(1:3,k) = cam2blackCB(t, refR, reft);
         
         % Ignore Bad Fits
         isBadfit = M.State1(auroraFrame);
@@ -536,20 +545,29 @@ while hasFrame(obj)
     % defined by the R and t. K is the camera intrinsics
     
     % Plot the ref frame of the reference checkerboard first
-    [R,t] = extrinsics(fixedRefCheckerboard.imagePoints, ...
-            fixedRefCheckerboard.worldPoints, gigiCameraParams3);
+[R,t] = ...
+            estimateWorldCameraPose(fixedRefCheckerboard.imagePoints,...
+            [fixedRefCheckerboard.worldPoints zeros(length(fixedRefCheckerboard.worldPoints(:,1)), 1)],...
+            gigiCameraParams3);
+        [R, t] = cameraPoseToExtrinsics(R, t);
     [origin, refx, refy, refz] = getFrameImage(R, t, K);
     data = drawReferenceFrame(data, origin, refx, refy, refz);
     
     % Then plot the RED checkerboard's axes
     if (firstBoard.colour(1) == 255)
-        [R,t] = extrinsics(firstBoard.imagePoints, ...
-            firstBoard.worldPoints, gigiCameraParams3);
+        [R,t] = ...
+            estimateWorldCameraPose(firstBoard.imagePoints,...
+            [firstBoard.worldPoints zeros(length(firstBoard.worldPoints(:,1)), 1)],...
+            gigiCameraParams3);
+        [R, t] = cameraPoseToExtrinsics(R, t);
         [origin, refx, refy, refz] = getFrameImage(R, t, K);
         data = drawReferenceFrame(data, origin, refx, refy, refz);
     elseif (secondBoard.colour(1) == 255)
-        [R,t] = extrinsics(secondBoard.imagePoints, ...
-            secondBoard.worldPoints, gigiCameraParams3);
+        [R,t] = ...
+            estimateWorldCameraPose(secondBoard.imagePoints,...
+            [secondBoard.worldPoints zeros(length(secondBoard.worldPoints(:,1)), 1)],...
+            gigiCameraParams3);
+        [R, t] = cameraPoseToExtrinsics(R, t);
         [origin, refx, refy, refz] = getFrameImage(R, t, K);
         data = drawReferenceFrame(data, origin, refx, refy, refz);
     end
@@ -648,7 +666,7 @@ sim('trackingSim')
 %% Data Analysis
 
 % First Tool(blue-yellow)
-l = [50; 70; 25];
+l = [50; 70; 50];
 
 % Estimated 3D positions in the camera frame
 worldPoints = zeros(length(time),4);
@@ -661,6 +679,7 @@ worldPoints1AuRef = zeros(size(worldPoints));
 for i = 1:length(time)
     % Estimated position of the Tool (in 3D and image) in camera frame
     [worldPoints(i,:), imagePoints(i,:)] = proj(a,l,hatX.data(i,:),Xf.data(i,:),cam);
+    worldPoints(i,:) = - worldPoints(i,:);
     [frameVect(:,:,i)] = frame_proj(a,l,hatX.data(i,:),Xf.data(i,:),cam);
        
     % Conversion to aurora ref frame
