@@ -23,7 +23,7 @@ warning off
 % Set the video file and define output video object
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
 PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\Lshape\';
-VIDEONAME = '20170407_145223';
+VIDEONAME = '20170407_144906';
 
 obj = VideoReader(strcat(PATH, VIDEONAME, '.mp4'));
 vidWidth = obj.Width;
@@ -31,7 +31,7 @@ vidHeight = obj.Height;
 mov = struct('cdata', zeros(vidHeight, vidWidth, 3, 'uint8'), 'colormap',[]);
 
 % CSV file with the groundtruth positions for validation
-M = tdfread(strcat(PATH, '20170407_145223.csv'), ',');
+M = tdfread(strcat(PATH, '20170407_144906.csv'), ',');
 
 %Size of checkerboard squares
 squareSize = 5.1;
@@ -207,8 +207,8 @@ while hasFrame(obj)
                     foundFixedCheckerboard = 1;
                     wp = fixedRefCheckerboard.worldPoints;
                     for i=1:length(wp(:,1))
-                        wp(i,1) = wp(i,1) + (wp(i,1)/5.4);
-                        wp(i,2) = wp(i,2) + (wp(i,2)/5.4);
+                        wp(i,1) = wp(i,1) + (wp(i,1)/squareSize);
+                        wp(i,2) = wp(i,2) + (wp(i,2)/squareSize);
                     end
                     fixedRefCheckerboard.worldPoints = wp;
                 end
@@ -710,7 +710,7 @@ xlabel('time [s]')
 ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
 subplot(2,3,3)
 plot(time(1:length(auroraPoints1)), worldPoints(1:length(auroraPoints1),3), time(1:length(auroraPoints1)), auroraPoints1(:,3)')
-%ylim([-150 300])
+%ylim([-300 300])
 grid on
 xlabel('time [s]')
 ylabel('$$P_z$$ [mm]' ,'Interpreter','Latex')
