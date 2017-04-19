@@ -136,6 +136,7 @@ while hasFrame(obj)
             
             firstBoard.threePoints(:,2) = board.threePoints(:,2)...
                 + yrange(1);
+            firstBoard.colour = board.colour;
             % If we did not find the second cboard in the little window
             % try the entire image.
         else
@@ -184,6 +185,7 @@ while hasFrame(obj)
                     + xrange(1);
                 secondBoard.threePoints(:,2) = board.threePoints(:,2)...
                     + yrange(1);
+                firstBoard.colour = board.colour;
                 % If we did not find the second cboard in the little window
                 % try the entire image.
             else
