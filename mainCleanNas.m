@@ -23,7 +23,7 @@ warning off
 % Set the video file and define output video object
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\Lshape\';
-PATH = 'C:\dev\Matlab\TeamProject\Videos\aurora\';
+PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\two_tools\';
 VIDEONAME = '20170407_140621';
 
 obj = VideoReader(strcat(PATH, VIDEONAME, '.mp4'));
@@ -694,7 +694,7 @@ while hasFrame(obj)
         
         % Get the position of the tool sensor in Aurora frame
         [auroraCurrentPoint2, cameuler, camorientation2] = getAuroraTranslation(record, R, t, squareSize);
-        auroraCurrentPoint2 = record(1:3);
+        %auroraCurrentPoint2 = record(1:3);
         auroraCurrent2InRefCB = aurora2refCB(auroraCurrentPoint2, squareSize);
         
         % transform the position of the red checkerboard from the cam frame
@@ -876,50 +876,50 @@ sim('trackingSim')
 %% Data Analysis
 
 % First Tool(blue-yellow)
-l = [50; 70; 50];
+l1 = [50; 70; 50];
 
 % Estimated 3D positions in the camera frame
-worldPoints = zeros(length(time),4);
+worldPoints1 = zeros(length(time),4);
 % Estimated 3D positions in the camera frame projected in the
 % image
-imagePoints = zeros(length(time),3);
+imagePoints1 = zeros(length(time),3);
 % Estimated 3D positions in the aurora ref frame
-worldPoints1AuRef = zeros(size(worldPoints));
+worldPoints1AuRef = zeros(size(worldPoints1));
 
 for i = 1:length(time)
     % Estimated position of the Tool (in 3D and image) in camera frame
-    [worldPoints(i,:), imagePoints(i,:)] = proj(a,l,hatX.data(i,:),Xf.data(i,:),cam);
-    worldPoints(i,:) = - worldPoints(i,:);
-    [frameVect(:,:,i)] = frame_proj(a,l,hatX.data(i,:),Xf.data(i,:),cam);
+    [worldPoints1(i,:), imagePoints1(i,:)] = proj(a,l1,hatX.data(i,:),Xf.data(i,:),cam);
+    worldPoints1(i,:) = - worldPoints1(i,:);
+    [frameVect1(:,:,i)] = frame_proj(a,l1,hatX.data(i,:),Xf.data(i,:),cam);
        
     % Conversion to aurora ref frame
-    worldPoints1AuRef(i,1:3) = cam2aurora(worldPoints(i,1:3), refR, reft, squareSize);
-    points1InRefCB(i,1:3) = cam2blackCB(worldPoints(i,1:3), R, t);
+    worldPoints1AuRef(i,1:3) = cam2aurora(worldPoints1(i,1:3), refR, reft, squareSize);
+    points1InRefCB(i,1:3) = cam2blackCB(worldPoints1(i,1:3), R, t);
 end
 % Estimated orientation of the Tool in camera frame
-worldAngles = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
+worldAngles1 = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
 
 % Compute abs error
-e = abs(worldPoints(1:length(auroraPoints1),1:3)- auroraPoints1(:,:));
+e = abs(worldPoints1(1:length(auroraPoints1),1:3)- auroraPoints1(:,:));
 
 % Plot aurora vs estimated pos in 3D
 figure(2), 
 title('In aurora reference frame'),
 subplot(2,3,1)
-plot(time(1:length(auroraPoints1)), worldPoints(1:length(auroraPoints1),1), time(1:length(auroraPoints1)), auroraPoints1(:,1)')
+plot(time(1:length(auroraPoints1)), worldPoints1(1:length(auroraPoints1),1), time(1:length(auroraPoints1)), auroraPoints1(:,1)')
 %ylim([-150 300])
 grid on
 xlabel('time [s]')
 ylabel('$$P_x$$ [mm]' ,'Interpreter','Latex')
 legend('Observed','Measured')
 subplot(2,3,2)
-plot(time(1:length(auroraPoints1)), worldPoints(1:length(auroraPoints1),2), time(1:length(auroraPoints1)), auroraPoints1(:,2)')
+plot(time(1:length(auroraPoints1)), worldPoints1(1:length(auroraPoints1),2), time(1:length(auroraPoints1)), auroraPoints1(:,2)')
 %ylim([-150 300])
 grid on
 xlabel('time [s]')
 ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
 subplot(2,3,3)
-plot(time(1:length(auroraPoints1)), worldPoints(1:length(auroraPoints1),3), time(1:length(auroraPoints1)), auroraPoints1(:,3)')
+plot(time(1:length(auroraPoints1)), worldPoints1(1:length(auroraPoints1),3), time(1:length(auroraPoints1)), auroraPoints1(:,3)')
 %ylim([-150 300])
 grid on
 xlabel('time [s]')
@@ -945,70 +945,73 @@ ylabel('$$|e_z|$$ [mm]' ,'Interpreter','Latex')
 
 %% Hand checkerboard position
 
-l1 = [0; 0; 0];
+% Second tool
+l2 = [50; 70; 50];
 
 % Estimated 3D positions in the camera frame
-worldPoints1 = zeros(4,length(time));
+worldPoints2 = zeros(length(time),4);
 % Estimated 3D positions in the camera frame projected in the
 % image
-imagePoints1 = zeros(3,length(time));
+imagePoints2 = zeros(length(time),3);
 % Estimated 3D positions in the aurora ref frame
-%worldPoints2AuRef = zeros(size(worldPoints1));
+worldPoints2AuRef = zeros(size(worldPoints2));
 
-% for i = 1:length(time)
-%     % Estimated position of the Tool (in 3D and image) in camera frame
-%     [worldPoints1(:,i), imagePoints1(:,i)] = proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
-%     [frameVect1(:,:,i)] = frame_proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
-%     % Conversion to aurora ref frame
-%     worldPoints2AuRef(1:3,i) = cam2aurora(worldPoints1(1:3,i), R, t, squareSize);
-% end
+for i = 1:length(time)
+    % Estimated position of the Tool (in 3D and image) in camera frame
+    [worldPoints2(i,:), imagePoints2(i,:)] = proj(a,l2,hatX.data(i,:),Xf.data(i,:),cam);
+    worldPoints2(i,:) = - worldPoints2(i,:);
+    [frameVect2(:,:,i)] = frame_proj(a,l2,hatX.data(i,:),Xf.data(i,:),cam);
+       
+    % Conversion to aurora ref frame
+    worldPoints2AuRef(i,1:3) = cam2aurora(worldPoints2(i,1:3), refR, reft, squareSize);
+    points2InRefCB(i,1:3) = cam2blackCB(worldPoints2(i,1:3), refR, reft);
+end
 % Estimated orientation of the Tool in camera frame
-worldAngles1 = Xf1.data(2:end,1:3) + [zeros(length(time),2), hatX1.data(2:end,1) + a];
+worldAngles2 = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
 
-% figure(7)
-% subplot(1,3,1)
-% plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(1,1:length(auroraPoints2)); auroraPoints2(:,1)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_x$$ [mm]' ,'Interpreter','Latex')
-% legend('Observed','Measured')
-% subplot(1,3,2)
-% plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(2,1:length(auroraPoints2)); auroraPoints2(:,2)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_y$$ [mm]' ,'Interpreter','Latex')
-% subplot(1,3,3)
-% plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(3,1:length(auroraPoints2)); auroraPoints2(:,3)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_z$$ [mm]' ,'Interpreter','Latex')
-% 
-% Red checkerboard points comparison for validation in the black
-% checkerboard frame
-% figure(8)
-% subplot(1,3,1)
-% plot(time(1:length(aurora2InRefCB)), [points2InRefCB(1,1:length(aurora2InRefCB)); aurora2InRefCB(:,1)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_x$$ [mm]' ,'Interpreter','Latex')
-% legend('Observed','Measured')
-% subplot(1,3,2)
-% plot(time(1:length(aurora2InRefCB)), [points2InRefCB(2,1:length(aurora2InRefCB)); aurora2InRefCB(:,2)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_y$$ [mm]' ,'Interpreter','Latex')
-% subplot(1,3,3)
-% plot(time(1:length(aurora2InRefCB)), [points2InRefCB(3,1:length(aurora2InRefCB)); aurora2InRefCB(:,3)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_z$$ [mm]' ,'Interpreter','Latex')
+% Compute abs error
+e = abs(worldPoints2(1:length(auroraPoints2),1:3)- auroraPoints2(:,:));
 
+% Plot aurora vs estimated pos in 3D
+figure(3), 
+title('In camera reference frame'),
+subplot(2,3,1)
+plot(time(1:length(auroraPoints2)), worldPoints2(1:length(auroraPoints2),1), time(1:length(auroraPoints2)), auroraPoints2(:,1)')
+%ylim([-150 300])
+grid on
+xlabel('time [s]')
+ylabel('$$P_x$$ [mm]' ,'Interpreter','Latex')
+legend('Observed','Measured')
+subplot(2,3,2)
+plot(time(1:length(auroraPoints2)), worldPoints2(1:length(auroraPoints2),2), time(1:length(auroraPoints2)), auroraPoints2(:,2)')
+%ylim([-150 300])
+grid on
+xlabel('time [s]')
+ylabel('$$P_y$$ [mm]' ,'Interpreter','Latex')
+subplot(2,3,3)
+plot(time(1:length(auroraPoints2)), worldPoints2(1:length(auroraPoints2),3), time(1:length(auroraPoints2)), auroraPoints2(:,3)')
+%ylim([-150 300])
+grid on
+xlabel('time [s]')
+ylabel('$$P_z$$ [mm]' ,'Interpreter','Latex')
+subplot(2,3,4)
+plot(time(1:length(auroraPoints2)), e(1:length(auroraPoints2),1))
+%ylim([-150 300])
+grid on
+xlabel('time [s]')
+ylabel('$$|e_x|$$ [mm]' ,'Interpreter','Latex')
+subplot(2,3,5)
+plot(time(1:length(auroraPoints2)), e(1:length(auroraPoints2),2))
+%ylim([-150 300])
+grid on
+xlabel('time [s]')
+ylabel('$$|e_y|$$ [mm]' ,'Interpreter','Latex')
+subplot(2,3,6)
+plot(time(1:length(auroraPoints2)), e(1:length(auroraPoints2),3))
+%ylim([-150 300])
+grid on
+xlabel('time [s]')
+ylabel('$$|e_z|$$ [mm]' ,'Interpreter','Latex')
 
 %% Plot Frame on Video
 % % Plot first tool position
