@@ -22,7 +22,8 @@ warning off
 %% Variable definitions
 % Set the video file and define output video object
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
-PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\Lshape\';
+%PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\Lshape\';
+PATH = 'C:\dev\Matlab\TeamProject\Videos\aurora\';
 VIDEONAME = '20170407_145223';
 
 obj = VideoReader(strcat(PATH, VIDEONAME, '.mp4'));
@@ -207,8 +208,8 @@ while hasFrame(obj)
                     foundFixedCheckerboard = 1;
                     wp = fixedRefCheckerboard.worldPoints;
                     for i=1:length(wp(:,1))
-                        wp(i,1) = wp(i,1) + (wp(i,1)/5.4);
-                        wp(i,2) = wp(i,2) + (wp(i,2)/5.4);
+                        wp(i,1) = wp(i,1) + (wp(i,1)/squareSize);
+                        wp(i,2) = wp(i,2) + (wp(i,2)/squareSize);
                     end
                     fixedRefCheckerboard.worldPoints = wp;
                 end
