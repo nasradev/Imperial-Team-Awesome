@@ -35,15 +35,16 @@ function [imagePoints, worldPoints, colour, threePoints] = ...
         rgb(2) = max(min(data(yrange,xrange,2)));
         rgb(3) = max(min(data(yrange,xrange,3)));
         
-        if (rgb(1) < 100) && (rgb(2) < 100) && (rgb(3) < 100) && ...
-          rgb(3) < rgb(1) + 40
-           colour = black;
-        elseif (rgb(3) > (rgb(2) - 30)) && (rgb(3) > (rgb(1) - 15))
-           colour = blue;
-        elseif (rgb(1) > (rgb(2) - 20)) && (rgb(1) > (rgb(3)+20))
-           colour = red; 
-        end
-        
+%         if (rgb(1) < 100) && (rgb(2) < 100) && (rgb(3) < 100) && ...
+%           rgb(3) < rgb(1) + 40
+%            colour = black;
+%         elseif (rgb(3) > (rgb(2) - 30)) && (rgb(3) > (rgb(1) - 15))
+%            colour = blue;
+%         elseif (rgb(1) > (rgb(2) - 20)) && (rgb(1) > (rgb(3)+20))
+%            colour = red; 
+%         end
+%       
+        colour = rgb;
         xBasePoint = floor(boardSize(1) / 2);
         yPoint = floor(boardSize(2) / 2) * (boardSize(1) - 1) + xBasePoint;
         threePoints = ...
