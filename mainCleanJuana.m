@@ -23,8 +23,8 @@ warning off
 % Set the video file and define output video object
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\16_03_17_Validation\';
 %PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\Lshape\';
-PATH = 'C:\dev\Matlab\TeamProject\Videos\aurora\';
-VIDEONAME = '20170407_145223';
+PATH = 'C:\Users\jg5915\OneDrive - Imperial College London\Group project\07_04_17_Validation\Lshape\';
+VIDEONAME = '20170407_145454';
 
 obj = VideoReader(strcat(PATH, VIDEONAME, '.mp4'));
 vidWidth = obj.Width;
@@ -32,7 +32,7 @@ vidHeight = obj.Height;
 mov = struct('cdata', zeros(vidHeight, vidWidth, 3, 'uint8'), 'colormap',[]);
 
 % CSV file with the groundtruth positions for validation
-M = tdfread(strcat(PATH, '20170407_145223.csv'), ',');
+M = tdfread(strcat(PATH, '20170407_145454.csv'), ',');
 
 %Size of checkerboard squares
 squareSize = 5.1;
@@ -676,26 +676,30 @@ worldPoints = zeros(length(time),4);
 imagePoints = zeros(length(time),3);
 % Estimated 3D positions in the aurora ref frame
 worldPoints1AuRef = zeros(size(worldPoints));
+% Estimated 3D positions in the black CB ref frame
+points1InRefCB = zeros(size(worldPoints));
 
 for i = 1:length(time)
     % Estimated position of the Tool (in 3D and image) in camera frame
     [worldPoints(i,:), imagePoints(i,:)] = proj(a,l,hatX.data(i,:),Xf.data(i,:),cam);
     worldPoints(i,:) = - worldPoints(i,:);
-    [frameVect(:,:,i)] = frame_proj(a,l,hatX.data(i,:),Xf.data(i,:),cam);
        
     % Conversion to aurora ref frame
-    worldPoints1AuRef(i,1:3) = cam2aurora(worldPoints(i,1:3), refR, reft, squareSize);
-    points1InRefCB(i,1:3) = cam2blackCB(worldPoints(i,1:3), R, t);
+    %worldPoints1AuRef(i,1:3) = cam2aurora(worldPoints(i,1:3), refR, reft, squareSize);
+    %points1InRefCB(i,1:3) = cam2blackCB(worldPoints(i,1:3), R, t);
 end
-% Estimated orientation of the Tool in camera frame
-worldAngles = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
 
-% Compute abs error
+% Compute errors
+% Absolute error
 e = abs(worldPoints(1:length(auroraPoints1),1:3)- auroraPoints1(:,:));
+% Means (for each axis in a row vector)
+M = mean(e);
+% Standard deviations (for each axis in a row vector)
+S = std(e);
 
 % Plot aurora vs estimated pos in 3D
 figure(2), 
-title('In aurora reference frame'),
+title('In camera reference frame'),
 subplot(2,3,1)
 plot(time(1:length(auroraPoints1)), worldPoints(1:length(auroraPoints1),1), time(1:length(auroraPoints1)), auroraPoints1(:,1)')
 %ylim([-150 300])
@@ -733,123 +737,6 @@ plot(time(1:length(auroraPoints1)), e(1:length(auroraPoints1),3))
 grid on
 xlabel('time [s]')
 ylabel('$$|e_z|$$ [mm]' ,'Interpreter','Latex')
-
-%% Hand checkerboard position
-
-l1 = [0; 0; 0];
-
-% Estimated 3D positions in the camera frame
-worldPoints1 = zeros(4,length(time));
-% Estimated 3D positions in the camera frame projected in the
-% image
-imagePoints1 = zeros(3,length(time));
-% Estimated 3D positions in the aurora ref frame
-%worldPoints2AuRef = zeros(size(worldPoints1));
-
-% for i = 1:length(time)
-%     % Estimated position of the Tool (in 3D and image) in camera frame
-%     [worldPoints1(:,i), imagePoints1(:,i)] = proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
-%     [frameVect1(:,:,i)] = frame_proj(a,l1,-hatX1.data(i,:),Xf1.data(i,:),cam);
-%     % Conversion to aurora ref frame
-%     worldPoints2AuRef(1:3,i) = cam2aurora(worldPoints1(1:3,i), R, t, squareSize);
-% end
-% Estimated orientation of the Tool in camera frame
-worldAngles1 = Xf1.data(2:end,1:3) + [zeros(length(time),2), hatX1.data(2:end,1) + a];
-
-% figure(7)
-% subplot(1,3,1)
-% plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(1,1:length(auroraPoints2)); auroraPoints2(:,1)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_x$$ [mm]' ,'Interpreter','Latex')
-% legend('Observed','Measured')
-% subplot(1,3,2)
-% plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(2,1:length(auroraPoints2)); auroraPoints2(:,2)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_y$$ [mm]' ,'Interpreter','Latex')
-% subplot(1,3,3)
-% plot(time(1:length(auroraPoints2)), [worldPoints2AuRef(3,1:length(auroraPoints2)); auroraPoints2(:,3)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_z$$ [mm]' ,'Interpreter','Latex')
-% 
-% Red checkerboard points comparison for validation in the black
-% checkerboard frame
-% figure(8)
-% subplot(1,3,1)
-% plot(time(1:length(aurora2InRefCB)), [points2InRefCB(1,1:length(aurora2InRefCB)); aurora2InRefCB(:,1)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_x$$ [mm]' ,'Interpreter','Latex')
-% legend('Observed','Measured')
-% subplot(1,3,2)
-% plot(time(1:length(aurora2InRefCB)), [points2InRefCB(2,1:length(aurora2InRefCB)); aurora2InRefCB(:,2)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_y$$ [mm]' ,'Interpreter','Latex')
-% subplot(1,3,3)
-% plot(time(1:length(aurora2InRefCB)), [points2InRefCB(3,1:length(aurora2InRefCB)); aurora2InRefCB(:,3)'])
-% ylim([-160 200])
-% grid on
-% xlabel('time [s]')
-% ylabel('$$RedCB P_z$$ [mm]' ,'Interpreter','Latex')
-
-
-%% Plot Frame on Video
-% % Plot first tool position
-% circleColour1 = [255 255 0];
-% shapeInserter1 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-%     'CustomBorderColor',circleColour1);
-% 
-% % Blue little circle
-% circleColour2 = [0 0 255];
-% shapeInserter2 = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-%     'CustomBorderColor',circleColour2);
-% 
-% % Plot hand checkerboard position in image
-% figure(11)
-% for j = 1:length(mov)
-%     circle1 = int32([imagePoints(1,j) imagePoints(2,j) 10; 0 0 0]);
-%     circle2 = int32([imagePoints1(1,j) imagePoints1(2,j) 10; 0 0 0]);
-%     mov(j).cdata = step(shapeInserter1, mov(j).cdata, circle1);
-%     mov(j).cdata = step(shapeInserter2, mov(j).cdata, circle2);
-%     
-%     % %First Tool
-%     %       frameVect(:,1,j)=frameVect(:,1,j)/frameVect(3,1,j);
-%     %       frameVect(:,2,j)=frameVect(:,2,j)/frameVect(3,2,j);
-%     %       frameVect(:,3,j)=frameVect(:,3,j)/frameVect(3,3,j);
-%     %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
-%     %     'CustomBorderColor',[255 50 0],'LineWidth',1);
-%     % % shapeInserter=vision.ShapeInserter('Shape','Lines')
-%     %      lxsize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
-%     %      lineScaleFactor = 1/lxsize * 50;
-%     %      linex = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
-%     %      data = step(shapeInserter, data, linex);
-%     %
-%     %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
-%     %     'CustomBorderColor',[0 255 50],'LineWidth',1);
-%     %
-%     %      lysize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
-%     %      lineScaleFactor = 1/lysize * 50;
-%     %      liney = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
-%     %      data = step(shapeInserter, data, liney);
-%     %
-%     %      shapeInserter = vision.ShapeInserter('Shape','Lines','BorderColor','Custom',...
-%     %     'CustomBorderColor',[50 0 255],'LineWidth',1);
-%     %
-%     %      lzsize = pdist([imagePoints(1,j) imagePoints(2,j); imagePoints(1,j)+frameVect(1,1,j) imagePoints(2)+frameVect(2,1)]);
-%     %      lineScaleFactor = 1/lzsize * 50;
-%     %      linez = int32([imagePoints(1,j) imagePoints(2,j) imagePoints(1,j)+lineScaleFactor*frameVect(1,1) imagePoints(2)+lineScaleFactor*frameVect(2,1)]);
-%     %      data = step(shapeInserter, data, linez);
-%     imshow(mov(j).cdata);
-%     pause(0.1);
-% end
 
 %% Output the results to video:
 v1 = VideoWriter(strcat(PATH, 'outputVideos\', VIDEONAME, 'Results'));

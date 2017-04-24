@@ -31,9 +31,6 @@ vidWidth = obj.Width;
 vidHeight = obj.Height;
 mov = struct('cdata', zeros(vidHeight, vidWidth, 3, 'uint8'), 'colormap',[]);
 
-% CSV file with the groundtruth positions for validation
-M = tdfread(strcat(PATH, '20170407_140621.csv'), ',');
-
 %Size of checkerboard squares
 squareSize = 5.1;
 
@@ -74,13 +71,10 @@ NoFrames = round((obj.Duration-timeOffset)*obj.frameRate);
 % Matrix for euler angles (3 first columns) and translation (3 last ones)
 % of the hand checkerboard (? quite sure)
 x = zeros(NoFrames, 6);
-x1 = zeros(NoFrames, 6);
 
 % Array with one row per frame and 5 columns (Points of the markers)
 m0 = zeros(NoFrames, 5);    % First color marker
 m1 = zeros(NoFrames, 5);    % Second color marker
-m2 = zeros(NoFrames, 5);    % First color marker second tool
-m3 = zeros(NoFrames, 5);    % Second color marker second tool
 
 % Use if aurora data and video are not aligned
 auroraStartOffset = 0;
@@ -329,29 +323,6 @@ while hasFrame(obj)
                 x(k,1:3) = x(k-1,1:3);
             end
         end
-        
-        % Get Euler Angles and Translation Blue Checkerboard
-        if firstBoard.colour(3) == 255 && firstBoard.imagePoints(1,1)>-1
-            [R,t] = ...
-            estimateWorldCameraPose(firstBoard.imagePoints,...
-            [firstBoard.worldPoints zeros(length(firstBoard.worldPoints(:,1)), 1)],...
-            gigiCameraParams3);
-        [R, t] = cameraPoseToExtrinsics(R, t);
-            x1(k,:) = [rotm2eul(R.','ZYX') t];
-        elseif secondBoard.colour(3) == 255 && secondBoard.imagePoints(1,1)>-1
-            [R,t] = ...
-                estimateWorldCameraPose(secondBoard.imagePoints,...
-                [secondBoard.worldPoints zeros(length(secondBoard.worldPoints(:,1)), 1)],...
-                gigiCameraParams3);
-            [R, t] = cameraPoseToExtrinsics(R, t);
-            x1(k,:) = [rotm2eul(R.','ZYX') t];
-        end
-        % manual filtering of the checkerboard angles
-        if k >1
-            if (norm(x1(k,1:3)-x1(k-1,1:3)) > 2.5 )
-                x1(k,1:3) = x1(k-1,1:3);
-            end
-        end
     end
     
     %% TODO See if we can introduce logic to find BLACK (i.e. ref frame)
@@ -511,8 +482,6 @@ while hasFrame(obj)
         
         m0(k,:) = blue;
         m1(k,:) = yellow;
-        m2(k,:) = green;
-        m3(k,:) = red;
         
         %%%% BLUE MARKER %%%%
         % Square centered on the red marker with an area 20 times the marker
@@ -657,68 +626,16 @@ while hasFrame(obj)
         refR = R;
         reft = t;
     end
-    auroraFrame = floor(1.4 *  (timeOffset + k)) + auroraStartOffset;
     
-    %%TODO: RENAME THE STUPID CAMPOINT/CAMEULER VARIABLES
-    if isempty(P) == 0 && auroraFrame <= length( M.Ty1 )
-        
-        %% TODO make a transformation aurora to checkerboard
-                
-        % (Tx, Ty, Tz) is ref checkerboard, 
-        % (Tx1, Ty1, Tz1)is tip marker,
-        % (Tx2, Ty2, Tz2) is hand checherboard
-        % The aurora ref frame goes as follows: 
-        %   x to the right
-        %   y far from camera
-        %   z up
-        
-        % We want to leave the aurora frame as it is and transform the
-        % detected positions to the aurora ref frame.
-        
-        % record: position and orientation of yellow marker from aurora
-        record = [M.Tx(auroraFrame), M.Ty(auroraFrame), M.Tz(auroraFrame), M.Q0(auroraFrame), M.Qx(auroraFrame), ...
-            M.Qy(auroraFrame), M.Qz(auroraFrame)];
-        
-        tic
-        % Get the position of the tool aurora sensor in camera frame
-        [auroraCurrentPoint1, cameuler, camrotation] = getAuroraTranslation(record, refR, reft, squareSize);
-        %auroraCurrentPoint1 = record(1:3);
-        % Get the position of the reference CB in aurora frame
-        
-        %Ignore Bad Fitsin
-        isBadfit = M.State1(auroraFrame);
-        if isBadfit(1)=='B'
-            auroraCurrentPoint1 = [0, 0, 0];%auroraPoints1(end,:);
-            cameuler = [0, 0, 0];%auroraOrientations1(end,:);
-        end
-        auroraPoints1 = [auroraPoints1; auroraCurrentPoint1];
-        auroraOrientations1 = [auroraOrientations1; cameuler];
-        
         %[focal length in mm]*[resolution]/[sensor size in mm]
         K = gigiCameraParams3.IntrinsicMatrix;
-        
-        % Transform into image point:
-        impoint = auroraCurrentPoint1 * K;
-        
-        % This rescales for Z
-        impoint = impoint / impoint(3);
-        
-%         % Little red circle for the aurora position od the tool projected
-%         % in the image
-%         shapeInserter = vision.ShapeInserter('Shape','Circles','BorderColor','Custom',...
-%             'CustomBorderColor',[255 0 0]);
-%         circle = int32([impoint(1) impoint(2) 10; 0 0 0]);
-%         data = step(shapeInserter, data, circle);
-        
-        % BTW camera position C in world frame is:
-        % C = -R'*t
         
     end
     
     if isfield(M, 'Ty') && isempty(P) == 0 && auroraFrame <= length( M.Ty )
         
-        record = [M.Tx2(auroraFrame), M.Ty2(auroraFrame), M.Tz2(auroraFrame), M.Q02(auroraFrame), M.Qx2(auroraFrame), ...
-            M.Qy2(auroraFrame), M.Qz2(auroraFrame)];
+        record = [M.Tx(auroraFrame), M.Ty(auroraFrame), M.Tz(auroraFrame), M.Q0(auroraFrame), M.Qx(auroraFrame), ...
+            M.Qy(auroraFrame), M.Qz(auroraFrame)];
         
         % Get the position of the tool sensor in Aurora frame
         [auroraCurrentPoint2, cameuler, camorientation2] = getAuroraTranslation(record, R, t, squareSize);
@@ -823,7 +740,6 @@ end %hasFrame
 %Hand Dimensions
 tr = 0; %mm
 a = 50*pi/180;
-a2 = 0; %
 
 % Observer
 squareSize = 5.1; %size of the scheckerboard squares in mm
@@ -835,18 +751,19 @@ T = dt*(k-1);
 time = dt : dt : T;
 
 X = [time' x];
-X1 = [time' x1];
 
+X1 = X;%[time' x1];
 Xf0 = [x(1,1) zeros(1,2) x(1,2) zeros(1,2) x(1,3) zeros(1,2) x(1,4) ...
     zeros(1,2) x(1,5) zeros(1,2) x(1,6) zeros(1,2)];
 
 M0 = [time', m0(:,3:5)];%tool reference (local)
 M1 = [time', m1(:,3:5)];
-M2 = [time', m2(:,3:5)];%tool reference (local)
-M3 = [time', m3(:,3:5)];
+M2 = M0;%[time', m2(:,3:5)];%tool reference (local)
+M3 = M1;%[time', m3(:,3:5)];
 
-Y = [time', m0(:,1:2), m1(:,1:2)];%measure (camera frame)
-Y1 = [time', m2(:,1:2), m3(:,1:2)];%measure (camera frame)
+Y = [time', m0(:,1:2), m1(:,1:2)];%measure (camer frame)
+Y1 = Y;
+% Y1 = [time', m2(:,1:2), m3(:,1:2)];%measure (camer frame)
 
 %% TODO: ASK GIGI WHAT THE FOLLOWING MAGIC DOES
 
@@ -901,13 +818,10 @@ sys = ss(Af,Bf,Cf,[]);
 %% Simulation
 sim('trackingSim')
 
-
 %% Data Analysis
 
-% First Tool(blue-yellow) In the right hand
-l1 = [70; 70; 50];
-% Use this instead if needle holder in right hand
-%l1 = [30; 30; 30];
+% First Tool(blue-yellow)
+l1 = [50; 70; 50];
 
 % Estimated 3D positions in the camera frame
 worldPoints1 = zeros(length(time),4);
@@ -931,7 +845,7 @@ end
 worldAngles1 = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
 
 % Compute abs error
-e = abs(worldPoints1(1:length(auroraPoints1),1:3) - auroraPoints1(:,:));
+e = abs(worldPoints1(1:length(auroraPoints1),1:3)- auroraPoints1(:,:));
 
 % Plot aurora vs estimated pos in 3D
 figure(2), 
@@ -977,9 +891,7 @@ ylabel('$$|e_z|$$ [mm]' ,'Interpreter','Latex')
 %% Hand checkerboard position
 
 % Second tool
-l2 = [30; 30; 30];
-% Use this if grasper on left hand
-%l2 = [50; 70; 50];
+l2 = [50; 70; 50];
 
 % Estimated 3D positions in the camera frame
 worldPoints2 = zeros(length(time),4);
@@ -991,16 +903,16 @@ worldPoints2AuRef = zeros(size(worldPoints2));
 
 for i = 1:length(time)
     % Estimated position of the Tool (in 3D and image) in camera frame
-    [worldPoints2(i,:), imagePoints2(i,:)] = proj(a2,l2,hatX1.data(i,:),Xf.data(i,:),cam);
+    [worldPoints2(i,:), imagePoints2(i,:)] = proj(a,l2,hatX.data(i,:),Xf.data(i,:),cam);
     worldPoints2(i,:) = - worldPoints2(i,:);
-    [frameVect2(:,:,i)] = frame_proj(a2,l2,hatX1.data(i,:),Xf.data(i,:),cam);
+    [frameVect2(:,:,i)] = frame_proj(a,l2,hatX.data(i,:),Xf.data(i,:),cam);
        
     % Conversion to aurora ref frame
     worldPoints2AuRef(i,1:3) = cam2aurora(worldPoints2(i,1:3), refR, reft, squareSize);
     points2InRefCB(i,1:3) = cam2blackCB(worldPoints2(i,1:3), refR, reft);
 end
 % Estimated orientation of the Tool in camera frame
-worldAngles2 = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX1.data(2:end,1) + a2];
+worldAngles2 = Xf.data(2:end,1:3) + [zeros(length(time),2), hatX.data(2:end,1) + a];
 
 % Compute abs error
 e = abs(worldPoints2(1:length(auroraPoints2),1:3)- auroraPoints2(:,:));
@@ -1045,9 +957,6 @@ plot(time(1:length(auroraPoints2)), e(1:length(auroraPoints2),3))
 grid on
 xlabel('time [s]')
 ylabel('$$|e_z|$$ [mm]' ,'Interpreter','Latex')
-
-%% saving data for skill assessment
-save(strcat(PATH, 'novices\', VIDEONAME, '.mat'), 'worldPoints1', 'worldPoints2');
 
 %% Plot Frame on Video
 % % Plot first tool position
